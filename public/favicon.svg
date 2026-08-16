@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#0F1A4A"/>
+  <!-- Scale motif: baseline with a plotted band + gold cap -->
+  <rect x="6" y="21" width="20" height="1.5" fill="#3B4A85"/>
+  <rect x="6" y="14" width="13" height="4" fill="#F7F4EC"/>
+  <rect x="18" y="14" width="1.6" height="4" fill="#C9A227"/>
+  <rect x="6" y="9" width="3" height="9" fill="#C9A227"/>
+</svg>

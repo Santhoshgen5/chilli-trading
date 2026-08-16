@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" font-family="'IBM Plex Sans', Arial, sans-serif">
+  <rect width="1200" height="630" fill="#0B1236"/>
+
+  <!-- Wordmark -->
+  <g transform="translate(80 90)">
+    <rect x="0" y="-4" width="6" height="34" fill="#C9A227"/>
+    <text x="22" y="24" font-size="34" font-weight="700" fill="#F7F4EC" letter-spacing="1">MAVEH</text>
+    <text x="180" y="24" font-size="34" font-weight="400" fill="#8791B8" letter-spacing="6">WORLD</text>
+  </g>
+
+  <!-- Headline -->
+  <text x="80" y="250" font-size="72" font-weight="700" fill="#F7F4EC">Dry red chilli,</text>
+  <text x="80" y="330" font-size="72" font-weight="700" fill="#F7F4EC">specified per lot.</text>
+
+  <!-- The Scale motif -->
+  <g transform="translate(80 420)" font-family="'IBM Plex Mono', monospace">
+    <text x="0" y="-18" font-size="18" fill="#8791B8" letter-spacing="3">SHU · SCOVILLE HEAT UNITS</text>
+    <!-- Byadgi -->
+    <rect x="0" y="6" width="1040" height="1" fill="#26356E"/>
+    <rect x="0" y="0" width="90" height="12" fill="#1CA9C9" opacity="0.0"/>
+    <rect x="80" y="0" width="70" height="12" fill="#F7F4EC"/>
+    <rect x="148" y="0" width="4" height="12" fill="#C9A227"/>
+    <!-- Sannam -->
+    <rect x="0" y="46" width="1040" height="1" fill="#26356E"/>
+    <rect x="360" y="40" width="160" height="12" fill="#F7F4EC"/>
+    <rect x="518" y="40" width="4" height="12" fill="#C9A227"/>
+    <!-- Teja -->
+    <rect x="0" y="86" width="1040" height="1" fill="#26356E"/>
+    <rect x="832" y="80" width="200" height="12" fill="#F7F4EC"/>
+    <rect x="1030" y="80" width="4" height="12" fill="#C9A227"/>
+
+    <text x="1040" y="112" font-size="16" fill="#8791B8" text-anchor="end">Byadgi · Sannam · Teja</text>
+  </g>
+
+  <text x="80" y="590" font-size="20" fill="#8791B8" font-family="'IBM Plex Mono', monospace">Teja · Byadgi · Sannam S4   |   MOQ 1 MT   |   HSN 09042110</text>
+</svg>
