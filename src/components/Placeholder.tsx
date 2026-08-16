@@ -26,8 +26,8 @@ export function Placeholder({ label, ratio = '4 / 3', className = '' }: Placehol
       <span aria-hidden className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-navy-700/25" />
 
       <div className="px-4 text-center">
-        <p className="font-mono text-[10px] uppercase tracking-label text-navy-400/70">Photo</p>
-        <p className="mt-1 font-mono text-xs text-navy-400">{label}</p>
+        <p className="font-mono text-[10px] uppercase tracking-label text-navy-400">Photo</p>
+        <p className="mt-1 font-mono text-xs text-navy-500">{label}</p>
       </div>
     </div>
   )

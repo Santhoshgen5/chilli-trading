@@ -9,6 +9,7 @@ export default function NotFound() {
         title="Page not found — MAVEH WORLD"
         description="The page you were looking for could not be found."
         path="/404"
+        noindex
       />
       <Section className="py-24 sm:py-32">
         <Container>

@@ -36,7 +36,7 @@ export default function Quality() {
                 <div className="flex gap-6 p-6 sm:p-8">
                   <span
                     aria-hidden
-                    className="font-mono text-2xl tabular-nums text-gold-500"
+                    className="font-mono text-2xl tabular-nums text-gold-700"
                   >
                     {String(i + 1).padStart(2, '0')}
                   </span>

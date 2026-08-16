@@ -47,8 +47,15 @@ export function TheScale({
   className = '',
   ariaLabel = 'Scoville heat scale',
 }: TheScaleProps) {
+  // role="img" prunes descendants from the a11y tree, so multi-band scales must
+  // carry the SHU data in the label itself (single-band callers already do).
+  const dataSummary = bands
+    .map(({ variety }) => `${variety.name} ${variety.shuLabel} Scoville heat units`)
+    .join('; ')
+  const label = bands.length > 1 ? `${ariaLabel}. ${dataSummary}` : ariaLabel
+
   return (
-    <div className={className} role="img" aria-label={ariaLabel}>
+    <div className={className} role="img" aria-label={label}>
       {showAxis && (
         <div className="mb-3 flex items-baseline gap-4">
           {showRowLabels && <span className={`${LABEL_W} shrink-0`} aria-hidden />}

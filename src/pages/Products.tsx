@@ -61,6 +61,8 @@ export default function Products() {
       {/* Cards */}
       <Section>
         <Container>
+          {/* sr-only h2 keeps the heading order h1 -> h2 -> h3 (cards are h3). */}
+          <h2 className="sr-only">Varieties</h2>
           <div className="grid gap-5 md:grid-cols-3">
             {varieties.map((variety) => (
               <VarietyCard key={variety.slug} variety={variety} />

@@ -44,6 +44,7 @@ export default function ProductDetail() {
         description={`${variety.fullName} dry red chilli: ${variety.shuLabel} SHU, ${variety.colour.toLowerCase()}, moisture ${variety.moisture}. ${variety.bestSuitedFor} HSN ${variety.hsn}.`}
         path={`/products/${variety.slug}`}
         jsonLd={productJsonLd}
+        ogType="product"
       />
 
       {/* Breadcrumb */}

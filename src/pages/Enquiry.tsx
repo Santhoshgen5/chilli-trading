@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Seo } from '../components/Seo'
@@ -74,7 +74,7 @@ function fieldError(id: string, error?: string) {
 }
 
 const inputBase =
-  'w-full rounded-sm border bg-white px-3.5 py-2.5 text-navy-900 placeholder:text-navy-400/60 focus:border-navy-400 transition-colors'
+  'w-full rounded-sm border bg-white px-3.5 py-2.5 text-navy-900 placeholder:text-navy-500 focus:border-navy-400 transition-colors'
 
 function inputCls(hasError?: boolean) {
   return `${inputBase} ${hasError ? 'border-red-500' : 'border-paper-line'}`
@@ -85,6 +85,7 @@ export default function Enquiry() {
   const [form, setForm] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
   const [status, setStatus] = useState<Status>('idle')
+  const botcheckRef = useRef<HTMLInputElement>(null)
 
   // Prefill variety from ?variety=slug (arriving from a product page).
   useEffect(() => {
@@ -110,17 +111,26 @@ export default function Enquiry() {
     setErrors((e) => (e.varieties ? { ...e, varieties: undefined } : e))
   }
 
-  // A WhatsApp fallback message pre-filled with whatever the buyer entered.
+  // A WhatsApp fallback message pre-filled with everything the buyer entered, so
+  // a failed submit never loses their details.
   const fallbackMessage = useMemo(() => {
     const names = form.varieties
       .map((s) => varieties.find((v) => v.slug === s)?.name)
       .filter(Boolean)
       .join(', ')
+    const who = [form.name, form.company].filter(Boolean).join(', ')
     const parts = [
       'Hello MAVEH WORLD, I would like a quote for dry red chilli.',
+      who && `From: ${who}.`,
       names && `Varieties: ${names}.`,
       form.quantity && `Quantity: ${form.quantity} MT.`,
       form.country && `Destination: ${form.country}${form.port ? `, ${form.port}` : ''}.`,
+      form.packing && `Packing: ${form.packing}.`,
+      form.incoterm && `Incoterm: ${form.incoterm}.`,
+      form.sample && 'Please include a sample before ordering.',
+      form.email && `Email: ${form.email}.`,
+      form.phone && `Phone: ${form.phone}.`,
+      form.message && `Message: ${form.message}`,
     ].filter(Boolean)
     return parts.join(' ')
   }, [form])
@@ -167,7 +177,8 @@ export default function Enquiry() {
       incoterm: form.incoterm || '—',
       sample_requested: form.sample ? 'Yes' : 'No',
       message: form.message || '—',
-      botcheck: '',
+      // Web3Forms honeypot: non-empty when a bot ticks the hidden box.
+      botcheck: botcheckRef.current?.checked ? 'true' : '',
     }
 
     try {
@@ -313,7 +324,7 @@ export default function Enquiry() {
                 </div>
 
                 {/* Varieties */}
-                <fieldset className="mt-5" aria-describedby={errors.varieties ? 'varieties-error' : undefined}>
+                <fieldset id="varieties" tabIndex={-1} className="mt-5" aria-describedby={errors.varieties ? 'varieties-error' : undefined}>
                   <legend className="label-mono text-navy-700">Variety * <span className="normal-case tracking-normal text-navy-400">(select one or more)</span></legend>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {varieties.map((v) => {
@@ -321,7 +332,7 @@ export default function Enquiry() {
                       return (
                         <label
                           key={v.slug}
-                          className={`cursor-pointer select-none rounded-sm border px-4 py-2.5 text-sm transition-colors ${
+                          className={`cursor-pointer select-none rounded-sm border px-4 py-2.5 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-cyan-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-paper ${
                             checked
                               ? 'border-navy-700 bg-navy-700 text-paper'
                               : 'border-paper-line bg-white text-navy-700 hover:border-navy-400'
@@ -426,7 +437,7 @@ export default function Enquiry() {
                 </label>
 
                 {/* Honeypot (hidden from users, catches bots) */}
-                <input type="checkbox" name="botcheck" tabIndex={-1} className="hidden" aria-hidden />
+                <input ref={botcheckRef} type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
 
                 <button
                   type="submit"
@@ -443,9 +454,9 @@ export default function Enquiry() {
                 <div className="rounded-sm border border-paper-line bg-white p-6">
                   <h2 className="label-mono text-navy-500">What happens next</h2>
                   <ul className="mt-4 space-y-3 text-sm text-navy-700">
-                    <li className="flex gap-3"><span className="font-mono text-gold-500">01</span> We review your requirement and confirm availability.</li>
-                    <li className="flex gap-3"><span className="font-mono text-gold-500">02</span> We reply with pricing on your Incoterm and the specification.</li>
-                    <li className="flex gap-3"><span className="font-mono text-gold-500">03</span> Samples can be arranged before you commit to an order.</li>
+                    <li className="flex gap-3"><span className="font-mono text-navy-700">01</span> We review your requirement and confirm availability.</li>
+                    <li className="flex gap-3"><span className="font-mono text-navy-700">02</span> We reply with pricing on your Incoterm and the specification.</li>
+                    <li className="flex gap-3"><span className="font-mono text-navy-700">03</span> Samples can be arranged before you commit to an order.</li>
                   </ul>
                 </div>
 
@@ -500,7 +511,7 @@ function ErrorBanner({ fallbackMessage }: { fallbackMessage: string }) {
 function SuccessPanel({ email, fallbackMessage }: { email: string; fallbackMessage: string }) {
   return (
     <div className="max-w-2xl rounded-sm border border-paper-line bg-white p-8 sm:p-12">
-      <p className="label-mono text-gold-700">Enquiry received</p>
+      <p className="label-mono text-navy-500">Enquiry received</p>
       <h2 className="mt-3 text-3xl">Thank you — we have your enquiry.</h2>
       <p className="mt-4 text-navy-500">
         We&rsquo;ll reply to <span className="font-mono text-navy-900">{email}</span> with pricing and
