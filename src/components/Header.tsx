@@ -65,11 +65,10 @@ export function Header({ current, overHero = false }: HeaderProps) {
     >
       <Container>
         <div className="flex h-16 items-center justify-between gap-4 sm:h-[4.5rem]">
-          <a
-            href={routes.home.path}
-            aria-label="MAVEH WORLD — home"
-            className="shrink-0 rounded-md"
-          >
+          {/* The wordmark's alt text names this link, so no aria-label is
+              needed — and none is wanted: an aria-label that did not contain
+              the visible text would fail the accessible-name rule. */}
+          <a href={routes.home.path} className="shrink-0 rounded-md">
             <Logo tone={tone} />
           </a>
 

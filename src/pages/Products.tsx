@@ -65,7 +65,10 @@ export default function ProductsPage() {
           <ul className="grid gap-6 md:grid-cols-3">
             {varieties.map((variety, i) => (
               <Reveal as="li" key={variety.slug} index={i} className="h-full">
-                <VarietyCard variety={variety} index={i} />
+                {/* Only the first card is eager: on this page the grid sits
+                    directly under the masthead, so its lead image is the one
+                    thing worth fetching ahead of a scroll. */}
+                <VarietyCard variety={variety} index={i} priority={i === 0} />
               </Reveal>
             ))}
           </ul>

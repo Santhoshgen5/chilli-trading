@@ -6,7 +6,7 @@ import { Card } from './Card'
 import { Badge, PungencyBadge } from './Badge'
 import { TheScale } from './TheScale'
 import { SpecTable } from './SpecTable'
-import { Placeholder } from './Placeholder'
+import { ProductImage } from './ProductImage'
 import { WhatsAppIcon } from './WhatsAppIcon'
 import { CtaBand } from './CtaBand'
 import { Reveal } from './motion/Reveal'
@@ -97,10 +97,29 @@ export function VarietyPage({ variety }: { variety: Variety }) {
               </Reveal>
             </div>
 
-            {/* Aside */}
+            {/*
+              Aside. On desktop it sticks, so the photograph stays in view while
+              the specification scrolls past it. On a phone the grid collapses
+              and this column follows the main one, which puts the specification
+              table above the photograph — the right order when the specification
+              is what the reader came for.
+            */}
             <aside className="lg:sticky lg:top-28 lg:self-start">
               <Reveal>
-                <Card className="p-6 sm:p-8">
+                <figure className="overflow-hidden rounded-card border border-paper-line bg-navy-100 shadow-card">
+                  <div className="aspect-[4/5] w-full">
+                    <ProductImage
+                      image={variety.image}
+                      alt={variety.imageAlt}
+                      crop="detail"
+                      sizes="(min-width: 1024px) 40vw, 100vw"
+                    />
+                  </div>
+                </figure>
+              </Reveal>
+
+              <Reveal delay={0.06}>
+                <Card className="mt-6 p-6 sm:p-8">
                   <h2 className="label-mono">Where it sits</h2>
                   <div className="mt-7">
                     <TheScale
@@ -109,14 +128,6 @@ export function VarietyPage({ variety }: { variety: Variety }) {
                     />
                   </div>
                 </Card>
-              </Reveal>
-
-              <Reveal delay={0.06}>
-                <Placeholder
-                  label={`${variety.name} — cleaned and sorted`}
-                  ratio="4 / 3"
-                  className="mt-6"
-                />
               </Reveal>
 
               <Reveal delay={0.1}>

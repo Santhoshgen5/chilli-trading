@@ -1,13 +1,16 @@
 // Hero contrast check — run with `npm run check:contrast`.
 //
-// White-on-image is where accessibility quietly fails, because the eye reads
+// Text on imagery is where accessibility quietly fails, because the eye reads
 // the average while the standard reads the worst pixel. So this does not
-// eyeball the hero: it samples the real generated image, replays the two scrim
-// gradients over it exactly as the browser composites them, and reports the
-// worst contrast ratio found anywhere the text block can sit — across every
-// viewport width where the photograph is used.
+// eyeball the hero: it samples the real generated images, replays the scrim
+// gradients over them exactly as the browser composites them, and reports the
+// worst contrast ratio found anywhere the copy can sit.
 //
-// It exits non-zero if any text colour drops below its WCAG AA threshold, so a
+// Both art-directed crops are checked — the wide one served from 640px up, and
+// the portrait one served to phones — each against the scrim that actually sits
+// over it, at the viewports where it is used.
+//
+// Exits non-zero if any text colour drops below its WCAG AA threshold, so a
 // future change to the art or the scrim cannot silently break the hero.
 
 import sharp from 'sharp'
@@ -15,25 +18,84 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const HERO = resolve(ROOT, 'public/media/hero-2000.webp')
 
-// --- Scrim, transcribed from HeroMedia.tsx ---------------------------------
-// Painted in this order over the image: horizontal first, then vertical.
-const SCRIM_X = [
-  { at: 0.0, rgb: [7, 12, 36], a: 1.0 },
-  { at: 0.34, rgb: [7, 12, 36], a: 0.92 },
-  { at: 0.62, rgb: [11, 18, 54], a: 0.68 },
-  { at: 1.0, rgb: [11, 18, 54], a: 0.26 },
-]
-const SCRIM_Y = [
-  { at: 0.0, rgb: [7, 12, 36], a: 0.85 },
-  { at: 0.38, rgb: [7, 12, 36], a: 0.12 },
-  { at: 1.0, rgb: [7, 12, 36], a: 0.16 },
+const NAVY_950 = [7, 12, 36]
+const NAVY_900 = [11, 18, 54]
+
+// Scrims transcribed from HeroMedia.tsx. Layers are listed in paint order.
+const CROPS = [
+  {
+    name: 'wide (>= 640px)',
+    file: resolve(ROOT, 'public/media/hero-2000.webp'),
+    viewports: [
+      { w: 640, h: 620 },
+      { w: 768, h: 700 },
+      { w: 1024, h: 760 },
+      { w: 1280, h: 774 },
+      { w: 1440, h: 774 },
+      { w: 1920, h: 800 },
+    ],
+    // Copy sits in a left-hand column: container is max-w-shell (1280px)
+    // centred, copy in a max-w-2xl block at its left edge. Generous on all sides.
+    box: { x0: 0.0, x1: 0.62, y0: 0.12, y1: 0.95 },
+    layers: [
+      {
+        axis: 'x',
+        stops: [
+          { at: 0.0, rgb: NAVY_950, a: 1.0 },
+          { at: 0.34, rgb: NAVY_950, a: 0.92 },
+          { at: 0.62, rgb: NAVY_900, a: 0.68 },
+          { at: 1.0, rgb: NAVY_900, a: 0.26 },
+        ],
+      },
+      {
+        axis: 'y',
+        stops: [
+          { at: 0.0, rgb: NAVY_950, a: 0.85 },
+          { at: 0.38, rgb: NAVY_950, a: 0.12 },
+          { at: 1.0, rgb: NAVY_950, a: 0.16 },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'portrait (< 640px)',
+    file: resolve(ROOT, 'public/media/hero-mobile-800.webp'),
+    viewports: [
+      { w: 360, h: 700 },
+      { w: 390, h: 780 },
+      { w: 414, h: 820 },
+      { w: 600, h: 900 },
+    ],
+    // On a phone the copy runs the full width, so the whole frame is in play.
+    // Copy stops at the spec strip; the band below it carries no text, which
+    // is why the scrim may taper there.
+    box: { x0: 0.0, x1: 1.0, y0: 0.1, y1: 0.9 },
+    // No horizontal weighting below 640px — two vertical passes instead.
+    layers: [
+      {
+        axis: 'y',
+        stops: [
+          { at: 0.0, rgb: NAVY_950, a: 0.92 },
+          { at: 0.45, rgb: NAVY_950, a: 0.8 },
+          { at: 0.88, rgb: NAVY_950, a: 0.66 },
+          { at: 1.0, rgb: NAVY_950, a: 0.3 },
+        ],
+      },
+      {
+        axis: 'y',
+        stops: [
+          { at: 0.0, rgb: NAVY_950, a: 0.55 },
+          { at: 0.38, rgb: NAVY_950, a: 0.1 },
+          { at: 1.0, rgb: NAVY_950, a: 0.1 },
+        ],
+      },
+    ],
+  },
 ]
 
-// --- Text in the hero ------------------------------------------------------
-// `min` is the WCAG AA threshold that applies at that element's size: 3.0 for
-// large text (>=24px, or >=18.66px bold), 4.5 for everything else.
+// `min` is the WCAG AA threshold for that element's size: 3.0 for large text
+// (>=24px, or >=18.66px bold), 4.5 for everything else.
 const TEXT = [
   { name: 'h1 headline (paper)', hex: '#F7F4EC', min: 3.0 },
   { name: 'subhead body (navy-200)', hex: '#D3DAEE', min: 4.5 },
@@ -42,21 +104,7 @@ const TEXT = [
   { name: 'spec value (paper)', hex: '#F7F4EC', min: 4.5 },
 ]
 
-// Viewports where the photograph is shown. Below 640px the picture falls back
-// to the flat navy gradient, which needs no sampling.
-const VIEWPORTS = [
-  { w: 640, h: 620 },
-  { w: 768, h: 700 },
-  { w: 1024, h: 760 },
-  { w: 1280, h: 774 },
-  { w: 1440, h: 774 },
-  { w: 1920, h: 800 },
-]
-
-// The text column, as a fraction of the hero box. Container is max-w-shell
-// (1280px) centred with 32px gutters; the copy sits in a max-w-2xl (672px)
-// block at its left edge. Generous on all sides.
-const TEXT_BOX = { x0: 0.0, x1: 0.62, y0: 0.12, y1: 0.95 }
+const SAMPLES = 140
 
 const lerp = (a, b, t) => a + (b - a) * t
 
@@ -100,68 +148,67 @@ function contrast(a, b) {
 
 const hexToRgb = (hex) => hex.replace('#', '').match(/../g).map((h) => parseInt(h, 16))
 
-const { data, info } = await sharp(HERO).raw().removeAlpha().toBuffer({ resolveWithObject: true })
-const IMG_W = info.width
-const IMG_H = info.height
-
 /** Replicates `object-fit: cover; object-position: center`. */
-function coverSample(vw, vh, fx, fy) {
-  const scale = Math.max(vw / IMG_W, vh / IMG_H)
-  const drawnW = IMG_W * scale
-  const drawnH = IMG_H * scale
-  const offsetX = (drawnW - vw) / 2
-  const offsetY = (drawnH - vh) / 2
-
-  const ix = Math.round((fx * vw + offsetX) / scale)
-  const iy = Math.round((fy * vh + offsetY) / scale)
-  const x = Math.min(IMG_W - 1, Math.max(0, ix))
-  const y = Math.min(IMG_H - 1, Math.max(0, iy))
-  const o = (y * IMG_W + x) * 3
-  return [data[o], data[o + 1], data[o + 2]]
-}
-
-const SAMPLES = 160
-let failed = false
-const worstOverall = new Map(TEXT.map((t) => [t.name, { ratio: Infinity, where: '' }]))
-
-process.stdout.write('Hero text contrast — worst pixel under each text colour\n')
-process.stdout.write('(image + horizontal scrim + vertical scrim, as composited)\n\n')
-
-for (const vp of VIEWPORTS) {
-  for (const text of TEXT) {
-    const fg = hexToRgb(text.hex)
-    let worst = Infinity
-
-    for (let i = 0; i <= SAMPLES; i++) {
-      for (let j = 0; j <= SAMPLES; j++) {
-        const fx = lerp(TEXT_BOX.x0, TEXT_BOX.x1, i / SAMPLES)
-        const fy = lerp(TEXT_BOX.y0, TEXT_BOX.y1, j / SAMPLES)
-
-        let px = coverSample(vp.w, vp.h, fx, fy)
-        px = over(px, sampleGradient(SCRIM_X, fx))
-        px = over(px, sampleGradient(SCRIM_Y, fy))
-
-        const ratio = contrast(fg, px)
-        if (ratio < worst) worst = ratio
-      }
-    }
-
-    const record = worstOverall.get(text.name)
-    if (worst < record.ratio) {
-      record.ratio = worst
-      record.where = `${vp.w}×${vp.h}`
-    }
+function makeSampler(data, imgW, imgH) {
+  return (vw, vh, fx, fy) => {
+    const scale = Math.max(vw / imgW, vh / imgH)
+    const offsetX = (imgW * scale - vw) / 2
+    const offsetY = (imgH * scale - vh) / 2
+    const ix = Math.round((fx * vw + offsetX) / scale)
+    const iy = Math.round((fy * vh + offsetY) / scale)
+    const x = Math.min(imgW - 1, Math.max(0, ix))
+    const y = Math.min(imgH - 1, Math.max(0, iy))
+    const o = (y * imgW + x) * 3
+    return [data[o], data[o + 1], data[o + 2]]
   }
 }
 
-for (const text of TEXT) {
-  const { ratio, where } = worstOverall.get(text.name)
-  const ok = ratio >= text.min
-  if (!ok) failed = true
-  process.stdout.write(
-    `  ${ok ? 'PASS' : 'FAIL'}  ${text.name.padEnd(26)} ${ratio.toFixed(2).padStart(6)}:1   ` +
-      `needs ${text.min.toFixed(1)}:1   worst at ${where}\n`,
-  )
+let failed = false
+
+process.stdout.write('Hero text contrast — worst pixel under each text colour\n')
+process.stdout.write('(real image + scrim layers, composited as the browser would)\n')
+
+for (const crop of CROPS) {
+  const { data, info } = await sharp(crop.file)
+    .raw()
+    .removeAlpha()
+    .toBuffer({ resolveWithObject: true })
+  const sample = makeSampler(data, info.width, info.height)
+
+  process.stdout.write(`\n  ${crop.name}  ${info.width}x${info.height}\n`)
+
+  for (const text of TEXT) {
+    const fg = hexToRgb(text.hex)
+    let worst = Infinity
+    let where = ''
+
+    for (const vp of crop.viewports) {
+      for (let i = 0; i <= SAMPLES; i++) {
+        for (let j = 0; j <= SAMPLES; j++) {
+          const fx = lerp(crop.box.x0, crop.box.x1, i / SAMPLES)
+          const fy = lerp(crop.box.y0, crop.box.y1, j / SAMPLES)
+
+          let px = sample(vp.w, vp.h, fx, fy)
+          for (const layer of crop.layers) {
+            px = over(px, sampleGradient(layer.stops, layer.axis === 'x' ? fx : fy))
+          }
+
+          const ratio = contrast(fg, px)
+          if (ratio < worst) {
+            worst = ratio
+            where = `${vp.w}x${vp.h}`
+          }
+        }
+      }
+    }
+
+    const ok = worst >= text.min
+    if (!ok) failed = true
+    process.stdout.write(
+      `    ${ok ? 'PASS' : 'FAIL'}  ${text.name.padEnd(26)} ${worst.toFixed(2).padStart(6)}:1   ` +
+        `needs ${text.min.toFixed(1)}:1   worst at ${where}\n`,
+    )
+  }
 }
 
 process.stdout.write(

@@ -61,6 +61,7 @@ export type RouteKey = keyof typeof routes
 
 /** Primary navigation, in order. */
 export const primaryNav: RouteKey[] = [
+  'home',
   'products',
   'quality',
   'packaging',

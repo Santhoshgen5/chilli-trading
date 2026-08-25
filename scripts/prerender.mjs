@@ -28,6 +28,29 @@ const ROOT_DIV = '<div id="root"></div>'
 
 const capitalise = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
+/**
+ * Inline the stylesheet into the document and drop the <link>.
+ *
+ * Lighthouse put ~2.4s of the mobile LCP in "render delay" with the image
+ * already loaded: the page was waiting on one render-blocking stylesheet, a
+ * whole extra round trip before anything could paint. The whole build is 7KB
+ * gzipped, so it costs less to carry it in the document than to go and fetch it.
+ *
+ * The trade is that it is re-sent per page rather than cached across them. For
+ * a ten-page marketing site, where most visits are one or two pages and first
+ * paint is what gets judged, the round trip is worth more than the cache.
+ */
+async function inlineStylesheet(html) {
+  const link = html.match(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/)
+  if (!link) return { html, inlined: 0 }
+
+  const css = await readFile(resolve(DIST, link[1].replace(/^\//, '')), 'utf8')
+  return {
+    html: html.replace(link[0], `<style>${css}</style>`),
+    inlined: Buffer.byteLength(css),
+  }
+}
+
 const server = await createServer({
   root: ROOT,
   logLevel: 'error',
@@ -74,11 +97,9 @@ try {
       throw new Error(`${route.file} must contain exactly ${ROOT_DIV} for prerendering`)
     }
 
-    await writeFile(
-      htmlFile,
-      html.replace(ROOT_DIV, `<div id="root">${markup}</div>`),
-      'utf8',
-    )
+    const withMarkup = html.replace(ROOT_DIV, `<div id="root">${markup}</div>`)
+    const { html: finalHtml, inlined } = await inlineStylesheet(withMarkup)
+    await writeFile(htmlFile, finalHtml, 'utf8')
 
     const kb = (Buffer.byteLength(markup) / 1024).toFixed(1)
     process.stdout.write(`  ✓ ${route.file.padEnd(16)} ${kb.padStart(6)} KB of HTML\n`)

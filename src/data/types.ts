@@ -40,6 +40,25 @@ export interface Variety {
   /** Available packing formats for this variety. */
   packing: string[]
 
+  // --- Photography ---
+  /**
+   * Image stem under `/media/products`, without crop, width or extension.
+   * `npm run images` emits `<image>-card-<w>` and `<image>-detail-<w>` from
+   * `assets/products/<image>.jpeg`, so swapping a photograph is a change to
+   * the source file and this one field.
+   *
+   * PROVISIONAL: these illustrate the variety only. They are not photographs
+   * of MAVEH WORLD's own stock, facility or packing line, and must never be
+   * captioned or placed so as to imply otherwise.
+   */
+  image: string
+  /**
+   * Alt text describing the variety's appearance — pod shape, colour, surface —
+   * so it carries information a sighted reader gets from the photograph.
+   * Never "chilli photo", and never a claim about whose stock it is.
+   */
+  imageAlt: string
+
   // --- Placeholders: client has not supplied these yet ---
   /** ASTA colour value. TODO: client to supply. */
   astaColour: string | null

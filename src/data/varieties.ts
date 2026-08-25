@@ -29,6 +29,9 @@ export const varieties: Variety[] = [
       'Best suited for hot sauce, oleoresin extraction and high-pungency spice blends.',
     applications: ['Hot sauce', 'Oleoresin', 'Pungency blends'],
     packing: ['5 kg PP bag', '25 kg PP bag', '50 kg PP bag', 'Jute bag', 'Vacuum pack'],
+    image: 'teja',
+    imageAlt:
+      'Teja pods in bulk — long, slender and tapering, with smooth glossy skin, an even scarlet red and short pale stems still attached.',
     // TODO: client to supply ASTA colour value for Teja.
     astaColour: null,
     // TODO: client to supply aflatoxin limit + testing lab for Teja.
@@ -54,6 +57,9 @@ export const varieties: Variety[] = [
       'Best suited for colour extraction, as a paprika substitute and for mild curry bases.',
     applications: ['Colour extraction', 'Paprika substitute', 'Mild curry bases'],
     packing: ['5 kg PP bag', '25 kg PP bag', '50 kg PP bag', 'Jute bag', 'Vacuum pack'],
+    image: 'byadgi',
+    imageAlt:
+      'Byadgi pods in bulk — broad and deeply wrinkled along their length, a dark crimson red with a matte surface, noticeably longer than Teja.',
     // TODO: client to supply ASTA colour value for Byadgi.
     astaColour: null,
     // TODO: client to supply aflatoxin limit + testing lab for Byadgi.
@@ -79,6 +85,9 @@ export const varieties: Variety[] = [
       'Best suited for general-purpose culinary use, with balanced heat and colour.',
     applications: ['General culinary', 'Balanced heat', 'Deep colour'],
     packing: ['5 kg PP bag', '25 kg PP bag', '50 kg PP bag', 'Jute bag', 'Vacuum pack'],
+    image: 'sannam',
+    imageAlt:
+      'Sannam S4 pods in bulk — uniform medium-length pods of even thickness, bright red with a lightly ridged skin and stems attached.',
     // TODO: client to supply ASTA colour value for Sannam S4.
     astaColour: null,
     // TODO: client to supply aflatoxin limit + testing lab for Sannam S4.
