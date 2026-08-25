@@ -61,6 +61,15 @@ export interface ComplianceItem {
   confirmed: boolean
 }
 
+export interface Market {
+  /** Country name as shown to the reader. */
+  name: string
+  /** ISO 3166-1 alpha-2 code. Used as the visual marker and in JSON-LD. */
+  code: string
+  /** Broad region, for grouping. */
+  region: string
+}
+
 export interface ProcessStep {
   title: string
   detail: string
@@ -96,7 +105,7 @@ export interface CompanyInfo {
   compliance: ComplianceItem[]
   process: ProcessStep[]
   /** Export destinations — reach, not a history claim. */
-  markets: string[]
+  markets: Market[]
 
   /** Ports of loading + transit times. TODO: client to supply. */
   ports: string | null

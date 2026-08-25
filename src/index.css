@@ -5,6 +5,9 @@
 @layer base {
   :root {
     color-scheme: light;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    /* Focus ring colour, swapped per surface by .surface-dark below. */
+    --focus-ring: theme(colors.cyan.600);
   }
 
   html {
@@ -13,27 +16,31 @@
   }
 
   body {
-    @apply bg-paper font-sans text-navy-900 antialiased;
-    /* Body text uses proportional figures; data/tables opt into tabular-nums. */
+    @apply bg-paper font-sans text-navy-600 antialiased;
     font-feature-settings: 'kern' 1;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     @apply font-display font-medium tracking-tight text-navy-900;
     text-wrap: balance;
   }
 
-  /* Visible keyboard focus everywhere. Cyan ring, offset from the element. */
+  /* Focus is visible on every surface. The ring colour follows the surface so
+     it clears 3:1 against both paper and navy. */
   :focus-visible {
-    @apply outline-none ring-2 ring-cyan-500 ring-offset-2 ring-offset-paper rounded-[2px];
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 3px;
   }
 
   ::selection {
-    background-color: #0F1A4A;
-    color: #F7F4EC;
+    background-color: theme(colors.navy.700);
+    color: theme(colors.paper.DEFAULT);
   }
 
-  /* Respect reduced-motion: disable animation + smooth scroll. */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -49,16 +56,81 @@
 }
 
 @layer components {
-  /* Instrument-style micro label used for readouts and section eyebrows. */
-  .label-mono {
-    @apply font-mono text-xs uppercase tracking-label text-navy-400;
+  /* ── Reveal ────────────────────────────────────────────────────────────────
+     The start state is applied only under `html.js-reveal`, a class set by a
+     short inline script in each HTML entry — and only when JS is running and
+     reduced motion has not been requested. The server-rendered markup carries
+     no opacity of its own, so the page is readable without JS, and a failsafe
+     in that script drops the class if hydration never happens. */
+  html.js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
   }
 
-  /* Skip link, revealed on focus. */
+  html.js-reveal [data-reveal][data-shown] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 550ms var(--ease-out),
+      transform 550ms var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* SHU bars grow along the axis on the same terms: no start state in the
+     server-rendered markup, so the bars are already at full length for a
+     reader without JS. */
+  html.js-reveal [data-grow-x] {
+    transform: scaleX(0);
+  }
+
+  html.js-reveal [data-grow-x][data-shown] {
+    transform: scaleX(1);
+    transition: transform 900ms var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Vertical counterpart, for the connecting rule on the narrow-screen
+     process timeline. */
+  html.js-reveal [data-grow-y] {
+    transform: scaleY(0);
+  }
+
+  html.js-reveal [data-grow-y][data-shown] {
+    transform: scaleY(1);
+    transition: transform 900ms var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* ── Surfaces ──────────────────────────────────────────────────────────── */
+
+  /* Any dark band. Flips the focus ring to the light cyan so it stays visible. */
+  .surface-dark {
+    --focus-ring: theme(colors.cyan.300);
+  }
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+
+  /* Instrument-style micro label used for readouts and section eyebrows.
+     navy-500 rather than navy-400: at this size it has to clear 4.5:1. */
+  .label-mono {
+    @apply font-mono text-xs uppercase tracking-label text-navy-500;
+  }
+
+  .label-mono-dark {
+    @apply font-mono text-xs uppercase tracking-label text-navy-300;
+  }
+
+  /* ── Furniture ─────────────────────────────────────────────────────────── */
+
+  /* The single gold accent: a hairline that fades out to the right. */
+  .rule-gold {
+    @apply h-px w-16 bg-gold-rule;
+  }
+
   .skip-link {
     @apply sr-only;
   }
   .skip-link:focus {
-    @apply not-sr-only fixed left-4 top-4 z-50 rounded bg-navy-700 px-4 py-2 font-mono text-sm text-paper;
+    @apply not-sr-only fixed left-4 top-4 z-50 rounded-md bg-navy-900 px-4 py-2 font-mono text-sm text-paper;
   }
 }

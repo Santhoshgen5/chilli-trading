@@ -92,3 +92,17 @@ export const SHU_AXIS_MAX = 100000
 export function getVariety(slug: string): Variety | undefined {
   return varieties.find((v) => v.slug === slug)
 }
+
+/**
+ * Pungency as a 1–3 step, for the level meter on the pungency badge.
+ *
+ * Derived from the variety's own SHU ceiling rather than stored as a separate
+ * field, so it cannot fall out of step with the specification if a range is
+ * ever revised. Teja → 3, Sannam → 2, Byadgi → 1.
+ */
+export function heatLevel(variety: Variety): 1 | 2 | 3 {
+  const share = variety.shuMax / SHU_AXIS_MAX
+  if (share >= 0.66) return 3
+  if (share >= 0.33) return 2
+  return 1
+}

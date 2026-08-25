@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0B1236" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!--
+      This route is its own document. Its title, description, canonical and Open
+      Graph tags are static here rather than written at runtime, and the page
+      body is prerendered into #root by scripts/prerender.mjs — so nothing on
+      this page depends on JavaScript having run.
+    -->
+    <title>Sannam (S4) Dry Red Chilli — Specification | MAVEH WORLD</title>
+    <meta name="description" content="Sannam S4 dry red chilli: 35,000–50,000 SHU, deep red, uniform size, moisture below 12%. Balanced heat and colour for general culinary use. HSN 09042110." />
+    <link rel="canonical" href="https://www.mavehworld.com/sannam" />
+
+    <meta property="og:type" content="product" />
+    <meta property="og:site_name" content="MAVEH WORLD" />
+    <meta property="og:url" content="https://www.mavehworld.com/sannam" />
+    <meta property="og:title" content="Sannam (S4) Dry Red Chilli — Specification | MAVEH WORLD" />
+    <meta property="og:description" content="Sannam (S4): 35,000–50,000 SHU, deep red, uniform size. Balanced heat and colour." />
+    <!-- TODO: replace with a 1200x630 PNG once real product photography exists. -->
+    <meta property="og:image" content="https://www.mavehworld.com/og-default.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!--
+      Scroll reveals start hidden. That start state is applied here, not in the
+      prerendered markup, so this page is readable without JS. Reduced motion
+      opts out entirely, and the timeout drops the start state if the bundle
+      never arrives rather than leaving content invisible.
+    -->
+    <script>
+      ;(function () {
+        try {
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+          var el = document.documentElement
+          el.classList.add('js-reveal')
+          setTimeout(function () {
+            if (!el.classList.contains('hydrated')) el.classList.remove('js-reveal')
+          }, 4000)
+        } catch (e) {}
+      })()
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Sannam (S4) Dry Red Chilli",
+        "category": "Dry red chilli",
+        "description": "Medium-high heat with deep red colour. Uniform size, cleaned and machine sorted.",
+        "url": "https://www.mavehworld.com/sannam",
+        "brand": {
+          "@type": "Brand",
+          "name": "MAVEH WORLD"
+        },
+        "additionalProperty": [
+          {
+            "@type": "PropertyValue",
+            "name": "Scoville heat units",
+            "value": "35,000–50,000 SHU"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "Moisture",
+            "value": "≤ 12%"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "Foreign matter",
+            "value": "Max 1%"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "HSN code",
+            "value": "09042110"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/entries/sannam.tsx"></script>
+  </body>
+</html>

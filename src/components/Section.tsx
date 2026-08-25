@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import { Reveal } from './motion/Reveal'
 
-/** Centered content column with responsive gutters. */
+/** Centred content column with responsive gutters. */
 export function Container({
   children,
   className = '',
@@ -9,9 +10,7 @@ export function Container({
   className?: string
 }) {
   return (
-    <div className={`mx-auto w-full max-w-6xl px-5 sm:px-8 ${className}`}>
-      {children}
-    </div>
+    <div className={`mx-auto w-full max-w-shell px-5 sm:px-8 ${className}`}>{children}</div>
   )
 }
 
@@ -26,43 +25,85 @@ export function Section({
   id?: string
 }) {
   return (
-    <section id={id} className={`py-16 sm:py-24 ${className}`}>
+    <section id={id} className={`py-20 sm:py-28 ${className}`}>
       {children}
     </section>
   )
 }
 
-/** Mono eyebrow label — the instrument-readout motif. */
-export function Eyebrow({ children }: { children: ReactNode }) {
+/** Hairline section divider, inset to the content column. */
+export function Divider({ className = '' }: { className?: string }) {
   return (
-    <p className="label-mono flex items-center gap-2">
-      <span aria-hidden className="inline-block h-px w-6 bg-gold-500" />
-      {children}
+    <Container>
+      <hr className={`border-0 border-t border-paper-line ${className}`} />
+    </Container>
+  )
+}
+
+/** Mono eyebrow label, led by the gold hairline. */
+export function Eyebrow({
+  children,
+  tone = 'light',
+}: {
+  children: ReactNode
+  tone?: 'light' | 'dark'
+}) {
+  // items-start, not items-center: when the label wraps to two lines on a
+  // narrow screen, a centred rule floats between them.
+  return (
+    <p className={`flex items-start gap-3 ${tone === 'dark' ? 'label-mono-dark' : 'label-mono'}`}>
+      <span aria-hidden className="rule-gold mt-[0.55em] w-8 shrink-0" />
+      <span>{children}</span>
     </p>
   )
 }
 
-/** Section heading with optional eyebrow + intro. */
+interface SectionHeadingProps {
+  eyebrow?: string
+  title: ReactNode
+  intro?: ReactNode
+  as?: 'h1' | 'h2'
+  tone?: 'light' | 'dark'
+  className?: string
+  /** Suppress the scroll reveal (for content already visible on load). */
+  static?: boolean
+}
+
+/** Section heading with optional eyebrow and intro paragraph. */
 export function SectionHeading({
   eyebrow,
   title,
   intro,
   as: As = 'h2',
+  tone = 'light',
   className = '',
-}: {
-  eyebrow?: string
-  title: ReactNode
-  intro?: ReactNode
-  as?: 'h1' | 'h2'
-  className?: string
-}) {
-  return (
-    <div className={`max-w-prose ${className}`}>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <As className={`mt-4 text-3xl sm:text-4xl ${As === 'h1' ? 'sm:text-5xl' : ''}`}>
+  static: isStatic = false,
+}: SectionHeadingProps) {
+  const body = (
+    <>
+      {eyebrow && <Eyebrow tone={tone}>{eyebrow}</Eyebrow>}
+      <As
+        className={`mt-5 text-display-sm sm:text-display-md ${
+          As === 'h1' ? 'lg:text-display-lg' : ''
+        } ${tone === 'dark' ? 'text-paper' : 'text-navy-900'}`}
+      >
         {title}
       </As>
-      {intro && <p className="mt-4 text-lg leading-relaxed text-navy-500">{intro}</p>}
-    </div>
+      {intro && (
+        <p
+          className={`mt-5 max-w-prose text-lg leading-relaxed ${
+            tone === 'dark' ? 'text-navy-200' : 'text-navy-500'
+          }`}
+        >
+          {intro}
+        </p>
+      )}
+    </>
+  )
+
+  if (isStatic) return <div className={`max-w-3xl ${className}`}>{body}</div>
+
+  return (
+    <Reveal className={`max-w-3xl ${className}`}>{body}</Reveal>
   )
 }

@@ -3,24 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0F1A4A" />
+    <meta name="theme-color" content="#0B1236" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-    <!-- Fallback <title> for non-JS crawlers. Per-page title/description/canonical/
-         OG are set at runtime by react-helmet-async (src/components/Seo.tsx); they
-         are intentionally NOT duplicated here to avoid conflicting tags per route. -->
+    <!--
+      Each route is its own document, so its title, description and canonical
+      are static in the HTML rather than written at runtime. Nothing here
+      depends on JS having run.
+    -->
     <title>MAVEH WORLD — Dry Red Chilli Exporter | Teja, Byadgi, Sannam S4</title>
+    <meta
+      name="description"
+      content="Indian exporter of dry red chilli — Teja, Byadgi and Sannam S4. Specified per lot: Scoville range, moisture below 12%, foreign matter under 1%. Minimum order 1 MT."
+    />
+    <link rel="canonical" href="https://www.mavehworld.com/" />
 
-    <!-- Global OG tags Helmet does not set per page -->
+    <meta property="og:type" content="website" />
     <meta property="og:site_name" content="MAVEH WORLD" />
-    <!-- Placeholder OG image (branded SVG). Replace with a 1200x630 PNG/JPG for
-         maximum social-preview compatibility — see README. -->
+    <meta property="og:url" content="https://www.mavehworld.com/" />
+    <meta
+      property="og:title"
+      content="MAVEH WORLD — Dry Red Chilli Exporter | Teja, Byadgi, Sannam S4"
+    />
+    <meta
+      property="og:description"
+      content="Indian exporter of dry red chilli — Teja, Byadgi and Sannam S4. Specified per lot. Minimum order 1 MT."
+    />
+    <!-- TODO: replace with a 1200x630 PNG once real product photography exists. -->
     <meta property="og:image" content="https://www.mavehworld.com/og-default.svg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- JSON-LD: Organization. Static so crawlers see it without executing JS. -->
+    <!--
+      The hero image is the LCP candidate. Preloading it means it is fetched
+      alongside the CSS rather than after the <picture> element parses. Gated on
+      the same media query the <picture> uses, so phones — which get the plain
+      navy gradient instead — never download it.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      href="/media/hero-2000.avif"
+      imagesrcset="/media/hero-640.avif 640w, /media/hero-960.avif 960w, /media/hero-1280.avif 1280w, /media/hero-1600.avif 1600w, /media/hero-2000.avif 2000w"
+      imagesizes="100vw"
+      media="(min-width: 640px)"
+      fetchpriority="high"
+    />
+
+    <!--
+      Scroll reveals start hidden. That start state is applied here, not in the
+      server-rendered markup, so the HTML this page ships is readable on its
+      own — without JS, and for any crawler that does not run it.
+      Reduced motion opts out entirely. The timeout is a failsafe: if the bundle
+      never arrives, `hydrated` is never set and the start state is dropped
+      rather than leaving the page invisible.
+    -->
+    <script>
+      ;(function () {
+        try {
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+          var el = document.documentElement
+          el.classList.add('js-reveal')
+          setTimeout(function () {
+            if (!el.classList.contains('hydrated')) el.classList.remove('js-reveal')
+          }, 4000)
+        } catch (e) {}
+      })()
+    </script>
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -38,14 +90,12 @@
           "postalCode": "614625",
           "addressCountry": "IN"
         },
-        "areaServed": [
-          "AE", "SA", "VN", "CN", "TH", "MY", "BD", "US", "GB", "DE"
-        ]
+        "areaServed": ["AE", "SA", "VN", "CN", "TH", "MY", "BD", "US", "GB", "DE"]
       }
     </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/entries/home.tsx"></script>
   </body>
 </html>

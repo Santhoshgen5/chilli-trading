@@ -64,18 +64,19 @@ export const company: CompanyInfo = {
     { title: 'Hygienic packing', detail: 'Packed in the agreed format under hygienic conditions.' },
   ],
 
-  // Export destinations — reach, not a claim of completed shipments.
+  // Export destinations — reach, not a claim of completed shipments. Nowhere on
+  // the site may these be described as countries already served or shipped to.
   markets: [
-    'United Arab Emirates',
-    'Saudi Arabia',
-    'Vietnam',
-    'China',
-    'Thailand',
-    'Malaysia',
-    'Bangladesh',
-    'United States',
-    'United Kingdom',
-    'Germany',
+    { name: 'United Arab Emirates', code: 'AE', region: 'Middle East' },
+    { name: 'Saudi Arabia', code: 'SA', region: 'Middle East' },
+    { name: 'Vietnam', code: 'VN', region: 'South-East Asia' },
+    { name: 'Thailand', code: 'TH', region: 'South-East Asia' },
+    { name: 'Malaysia', code: 'MY', region: 'South-East Asia' },
+    { name: 'China', code: 'CN', region: 'East Asia' },
+    { name: 'Bangladesh', code: 'BD', region: 'South Asia' },
+    { name: 'United States', code: 'US', region: 'North America' },
+    { name: 'United Kingdom', code: 'GB', region: 'Europe' },
+    { name: 'Germany', code: 'DE', region: 'Europe' },
   ],
 
   // TODO: client to supply ports of loading and typical transit times.

@@ -1,25 +1,37 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 
-type Variant = 'primary' | 'secondary' | 'ghost'
-type Size = 'md' | 'lg'
+// Navigation is plain `<a href>` — there is no client-side router, so a link is
+// a link. `<button>` is reserved for things that are not navigation (form
+// submits, the mobile menu toggle).
+
+type Variant = 'primary' | 'secondary' | 'on-dark' | 'on-dark-outline' | 'ghost'
+type Size = 'sm' | 'md' | 'lg'
 
 const base =
-  'inline-flex items-center justify-center gap-2 font-medium tracking-tight transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex items-center justify-center gap-2 rounded-md font-medium tracking-tight transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50'
 
 const sizes: Record<Size, string> = {
+  sm: 'px-3.5 py-2 text-sm',
   md: 'px-5 py-2.5 text-sm',
   lg: 'px-7 py-3.5 text-base',
 }
 
 const variants: Record<Variant, string> = {
-  // Navy solid — primary conversion action (RFQ).
-  primary: 'bg-navy-700 text-paper hover:bg-navy-900',
-  // Navy outline — secondary.
+  // Solid navy — the primary conversion action.
+  primary:
+    'bg-navy-700 text-paper shadow-card hover:bg-navy-900 hover:shadow-lift hover:-translate-y-px active:translate-y-0',
+  // Outline on paper — secondary.
   secondary:
-    'border border-navy-700 text-navy-700 hover:bg-navy-700 hover:text-paper',
-  // Understated — tertiary / inline.
-  ghost: 'text-navy-700 hover:text-cyan-700 underline underline-offset-4 decoration-navy-400/40 hover:decoration-cyan-700',
+    'border border-paper-line-strong bg-paper-50 text-navy-700 shadow-hairline hover:border-navy-400 hover:text-navy-900 hover:shadow-card hover:-translate-y-px active:translate-y-0',
+  // Gold solid, for use inside a dark band. navy-900 on gold is 7.5:1.
+  'on-dark':
+    'bg-gold-500 text-navy-900 shadow-card hover:bg-gold-300 hover:-translate-y-px active:translate-y-0',
+  // Outline inside a dark band.
+  'on-dark-outline':
+    'border border-navy-300/40 text-paper hover:border-navy-200 hover:bg-paper/10 hover:-translate-y-px active:translate-y-0',
+  // Inline text link. cyan-700 clears 4.5:1 on paper.
+  ghost:
+    'text-cyan-700 underline underline-offset-4 decoration-cyan-700/30 hover:decoration-cyan-700',
 }
 
 interface CommonProps {
@@ -29,48 +41,33 @@ interface CommonProps {
   children: ReactNode
 }
 
-interface LinkProps extends CommonProps {
-  to: string
-  href?: never
-  onClick?: never
-  type?: never
-}
 interface AnchorProps extends CommonProps {
   href: string
-  to?: never
-  onClick?: never
-  type?: never
-  /** Set for external links. */
+  /** Opens in a new tab with the usual rel guard. */
   external?: boolean
-}
-interface ButtonElProps extends CommonProps {
-  onClick?: () => void
-  type?: 'button' | 'submit'
-  to?: never
-  href?: never
+  type?: never
+  onClick?: never
 }
 
-type Props = LinkProps | AnchorProps | ButtonElProps
+interface ButtonElProps extends CommonProps {
+  type?: 'button' | 'submit'
+  onClick?: () => void
+  href?: never
+  external?: never
+}
+
+type Props = AnchorProps | ButtonElProps
 
 export function Button(props: Props) {
   const { variant = 'primary', size = 'md', className = '', children } = props
   const cls = `${base} ${sizes[size]} ${variants[variant]} ${className}`
 
-  if ('to' in props && props.to) {
-    return (
-      <Link to={props.to} className={cls}>
-        {children}
-      </Link>
-    )
-  }
-
   if ('href' in props && props.href) {
-    const ext = props.external
     return (
       <a
         href={props.href}
         className={cls}
-        {...(ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        {...(props.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
         {children}
       </a>
