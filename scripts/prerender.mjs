@@ -159,4 +159,19 @@ try {
   await server.close()
 }
 
+// The quote form is the only thing on this site with a job beyond being read,
+// and Vite inlines VITE_WEB3FORMS_KEY at build time — so an unset key is baked
+// in as an empty string and cannot be fixed afterwards by configuring the host.
+// A silent miss means every enquiry falls back to "the form didn't send", so
+// the build says so loudly, in the deploy log, where it will actually be seen.
+if (!process.env.VITE_WEB3FORMS_KEY) {
+  process.stdout.write(`
+  ! VITE_WEB3FORMS_KEY is not set.
+    The quote form will not deliver email. Buyers get the WhatsApp and email
+    fallback instead, with their details preserved, but nothing reaches the
+    inbox. Set it in Netlify under Site settings > Environment variables and
+    redeploy — it must be present BEFORE the build runs.
+`)
+}
+
 process.stdout.write(`Prerendered ${rendered} page(s)${skipped ? `, skipped ${skipped}` : ''}.\n`)

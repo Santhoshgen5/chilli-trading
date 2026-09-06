@@ -137,26 +137,32 @@ crop cannot hold, so the hero falls back to the flat navy gradient.
 Swapping in real product photography later is a change to `src/data/media.ts`
 plus a source file — `<HeroMedia>` takes the image as a prop.
 
-## Web3Forms key (enquiry form)
+## Web3Forms key — REQUIRED for the quote form
 
-The **Request a Quote** form posts to [Web3Forms](https://web3forms.com). It needs
-a free access key.
+**The quote form does not deliver email until this is set.** Vite inlines
+`VITE_`-prefixed variables at build time, so an unset key is baked into the
+bundle as an empty string; setting it afterwards on the host changes nothing
+until you rebuild. `npm run build` prints a warning when it is missing, and
+`npm run check:form` reports what a buyer actually experiences.
 
-1. Go to web3forms.com and create an access key, entering the inbox that should
-   receive enquiries (e.g. `worldofmaveh@gmail.com`).
-2. Copy `.env.example` to `.env`.
-3. Paste the key:
+Without a key the form degrades rather than dead-ends: the buyer sees "the form
+didn't send" and is offered WhatsApp and email links prefilled with everything
+they typed. Nothing is lost — but nothing reaches the inbox either, and every
+enquiry then depends on the buyer clicking again.
+
+1. Create a free access key at [web3forms.com](https://web3forms.com), entering
+   the inbox that should receive enquiries (e.g. `worldofmaveh@gmail.com`).
+2. Locally: copy `.env.example` to `.env` and paste the key.
 
    ```
    VITE_WEB3FORMS_KEY=your-access-key-here
    ```
 
-4. On Netlify, add the same variable under **Site settings → Environment
-   variables** (Vite inlines `VITE_`-prefixed vars at build time, so it must be
-   set before the build runs).
+3. On Netlify: add the same variable under **Site settings → Environment
+   variables**, then trigger a redeploy so the build picks it up.
 
-If the key is missing or the request fails, the form does **not** dead-end — it
-shows the buyer a WhatsApp/email fallback prefilled with their details.
+The form also posts natively via its `action` attribute, so it still works with
+JavaScript disabled — once a key is configured.
 
 ## The admin — adding and editing products
 
