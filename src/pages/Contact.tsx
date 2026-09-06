@@ -17,11 +17,11 @@ import type { VarietySlug } from '../data/types'
 // works precisely because the page is prerendered — registers its fields, and
 // collects submissions under Site configuration > Forms.
 //
-// One POST serves both paths. With JS we send it ourselves so the reader stays
-// on the page; without JS the browser posts natively and Netlify returns them
-// to `?sent=1`, which renders the same confirmation.
+// One POST serves both paths. With JS we send it ourselves and confirm in
+// place; without it the browser posts natively and Netlify redirects to the
+// action, which is why that is a real page rather than a query flag.
 const FORM_NAME = 'quote'
-const FORM_ACTION = '/contact?sent=1'
+const FORM_ACTION = '/thanks'
 
 type Status = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -93,15 +93,6 @@ export default function ContactPage() {
   const [form, setForm] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
   const [status, setStatus] = useState<Status>('idle')
-
-  // A reader without JS is posted away and returned here by Netlify. The query
-  // flag is how they learn it worked — otherwise they would land back on an
-  // apparently untouched form.
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('sent') === '1') {
-      setStatus('success')
-    }
-  }, [])
 
   // Prefill the variety from ?variety=slug — the quote buttons on the product
   // pages arrive here with one selected. Read from location rather than a

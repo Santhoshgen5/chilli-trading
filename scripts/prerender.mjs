@@ -139,7 +139,10 @@ try {
   // a URL that does not exist, or miss one that does — including the variety
   // pages, which nobody registers by hand.
   const origin = String(company.siteUrl).replace(/\/$/, '')
-  const urls = live
+  // A page can exist without belonging in search results — the form's
+  // confirmation page means nothing to anyone who has not just submitted it.
+  const indexable = live.filter((route) => !route.noindex)
+  const urls = indexable
     .map((route) => {
       const loc = `${origin}${route.path === '/' ? '/' : route.path}`
       const priority = route.path === '/' ? '1.0' : route.path === '/contact' ? '0.9' : '0.8'
@@ -154,7 +157,7 @@ try {
       `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
     'utf8',
   )
-  process.stdout.write(`  ✓ sitemap.xml     ${live.length} URL(s)\n`)
+  process.stdout.write(`  ✓ sitemap.xml     ${indexable.length} URL(s)\n`)
 } finally {
   await server.close()
 }

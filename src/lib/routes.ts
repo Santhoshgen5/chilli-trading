@@ -25,6 +25,8 @@ export interface Route {
   label: string
   /** Full label for breadcrumbs, footers and link titles. */
   title: string
+  /** Keep out of the sitemap and out of search results. */
+  noindex?: boolean
 }
 
 /** Static pages — one hand-written component each, under `src/pages/`. */
@@ -60,6 +62,20 @@ export const routes = {
     file: 'contact.html',
     label: 'Contact',
     title: 'Contact & request a quote',
+  },
+  // Where the quote form lands. Netlify redirects a native (no-JS) submission
+  // to the form's `action`, so this has to be a real page rather than a query
+  // flag on the form itself — and a plain path, since a query string in the
+  // action is one more thing for form detection to disagree with.
+  //
+  // Not in the navigation and not in the sitemap: it means nothing to anyone
+  // who has not just submitted the form.
+  thanks: {
+    path: '/thanks',
+    file: 'thanks.html',
+    label: 'Thank you',
+    title: 'Enquiry received',
+    noindex: true,
   },
 } as const satisfies Record<string, Route>
 

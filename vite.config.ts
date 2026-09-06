@@ -16,6 +16,39 @@ const input = Object.fromEntries(
 )
 
 /**
+ * Refuse form posts locally, loudly.
+ *
+ * Netlify handles form submissions at its edge; neither the dev server nor
+ * `vite preview` has any such handler. Left alone, a POST to the form's action
+ * just returns that page with a 200 — which the submit handler reads as
+ * success, so the site cheerfully says "Thank you" having sent nothing. That is
+ * worse than failing outright, because it hides the failure.
+ *
+ * 501 is the honest answer: the endpoint exists in production, not here. The
+ * page then shows its error state with the WhatsApp and email fallback, which
+ * is exactly what a real failure looks like.
+ */
+function noLocalFormHandler(): Plugin {
+  const attach = (server: ViteDevServer | PreviewServer) => {
+    server.middlewares.use((req, res, next) => {
+      if (req.method !== 'POST') return next()
+      res.statusCode = 501
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.end(
+        'Form submissions are handled by Netlify and are not available locally.\n' +
+          'Deploy, or test against the deployed site.\n',
+      )
+    })
+  }
+
+  return {
+    name: 'no-local-form-handler',
+    configureServer: (server) => attach(server),
+    configurePreviewServer: (server) => attach(server),
+  }
+}
+
+/**
  * Serve `/products` from `products.html`.
  *
  * Netlify does this for us in production. Without it locally, dev and preview
@@ -45,7 +78,7 @@ function cleanUrls(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), cleanUrls()],
+  plugins: [react(), cleanUrls(), noLocalFormHandler()],
   build: {
     target: 'es2020',
     cssCodeSplit: true,
