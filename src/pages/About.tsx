@@ -3,7 +3,6 @@ import { PageHeader } from '../components/PageHeader'
 import { Container, Section, SectionHeading } from '../components/Section'
 import { Card } from '../components/Card'
 import { ComplianceStrip } from '../components/ComplianceStrip'
-import { Placeholder } from '../components/Placeholder'
 import { CtaBand } from '../components/CtaBand'
 import { TileLink } from '../components/TileLink'
 import { Reveal } from '../components/motion/Reveal'
@@ -66,7 +65,7 @@ export default function AboutPage() {
       {/* Registrations */}
       <Section className="border-t border-paper-line bg-paper-100">
         <Container>
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
+          <div className="max-w-2xl">
             <div>
               <SectionHeading
                 eyebrow="Registrations"
@@ -80,10 +79,6 @@ export default function AboutPage() {
                 <TileLink href={routes.quality.path}>How each lot is prepared</TileLink>
               </Reveal>
             </div>
-
-            <Reveal delay={0.06}>
-              <Placeholder label="Warehouse and packing floor" ratio="4 / 3" />
-            </Reveal>
           </div>
         </Container>
       </Section>

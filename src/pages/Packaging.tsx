@@ -3,7 +3,6 @@ import { PageHeader } from '../components/PageHeader'
 import { Container, Section, SectionHeading } from '../components/Section'
 import { Card } from '../components/Card'
 import { Badge } from '../components/Badge'
-import { Placeholder } from '../components/Placeholder'
 import { CtaBand } from '../components/CtaBand'
 import { Reveal } from '../components/motion/Reveal'
 import { company } from '../data/company'
@@ -114,10 +113,6 @@ export default function PackagingPage() {
               <p className="mt-4 text-navy-900">{company.ports}</p>
             </Reveal>
           )}
-
-          <Reveal className="mt-12">
-            <Placeholder label="Palletised bags, ready for loading" ratio="21 / 9" />
-          </Reveal>
         </Container>
       </Section>
 

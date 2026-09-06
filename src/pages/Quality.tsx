@@ -3,7 +3,6 @@ import { PageHeader } from '../components/PageHeader'
 import { Container, Section, SectionHeading } from '../components/Section'
 import { ProcessTimeline } from '../components/ProcessTimeline'
 import { ComplianceStrip } from '../components/ComplianceStrip'
-import { Placeholder } from '../components/Placeholder'
 import { Card } from '../components/Card'
 import { CtaBand } from '../components/CtaBand'
 import { Reveal } from '../components/motion/Reveal'
@@ -67,15 +66,6 @@ export default function QualityPage() {
             client has not supplied figures or a testing lab. See the TODO
             markers in src/data/varieties.ts. Nothing stands in for them.
           */}
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
-            <Reveal index={0}>
-              <Placeholder label="Colour sorting line" ratio="16 / 10" />
-            </Reveal>
-            <Reveal index={1}>
-              <Placeholder label="Metal detection and packing" ratio="16 / 10" />
-            </Reveal>
-          </div>
         </Container>
       </Section>
 
