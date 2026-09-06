@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Shell } from '../components/Shell'
 import { PageHeader } from '../components/PageHeader'
@@ -12,8 +12,16 @@ import { company } from '../data/company'
 import { varieties } from '../data/varieties'
 import type { VarietySlug } from '../data/types'
 
-const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit'
-const ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined
+// Netlify Forms. There is no API key and no third-party service to configure:
+// Netlify finds this form by parsing the deployed HTML at build time — which
+// works precisely because the page is prerendered — registers its fields, and
+// collects submissions under Site configuration > Forms.
+//
+// One POST serves both paths. With JS we send it ourselves so the reader stays
+// on the page; without JS the browser posts natively and Netlify returns them
+// to `?sent=1`, which renders the same confirmation.
+const FORM_NAME = 'quote'
+const FORM_ACTION = '/contact?sent=1'
 
 type Status = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -85,7 +93,15 @@ export default function ContactPage() {
   const [form, setForm] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
   const [status, setStatus] = useState<Status>('idle')
-  const botcheckRef = useRef<HTMLInputElement>(null)
+
+  // A reader without JS is posted away and returned here by Netlify. The query
+  // flag is how they learn it worked — otherwise they would land back on an
+  // apparently untouched form.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('sent') === '1') {
+      setStatus('success')
+    }
+  }, [])
 
   // Prefill the variety from ?variety=slug — the quote buttons on the product
   // pages arrive here with one selected. Read from location rather than a
@@ -142,8 +158,8 @@ export default function ContactPage() {
   }, [form])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    // Without JS this handler never runs and the form posts natively to
-    // Web3Forms via its `action` — see the <form> below.
+    // Without JS this never runs: the browser posts the same form natively to
+    // the same place. See the <form> below.
     event.preventDefault()
 
     const validation = validate(form)
@@ -153,46 +169,22 @@ export default function ContactPage() {
       return
     }
 
-    if (!ACCESS_KEY) {
-      // No key configured. Surface the WhatsApp route rather than failing quietly.
-      console.warn('VITE_WEB3FORMS_KEY is not set — see README.')
-      setStatus('error')
-      return
-    }
-
     setStatus('submitting')
 
-    const selected = form.varieties
-      .map((s) => varieties.find((v) => v.slug === s)?.fullName)
-      .filter(Boolean)
-      .join(', ')
+    // Read the fields out of the DOM rather than rebuilding a payload by hand.
+    // The native no-JS post sends exactly these fields, so taking them from the
+    // same source keeps the two paths from ever drifting apart.
+    const body = new URLSearchParams(
+      Array.from(new FormData(event.currentTarget), ([key, value]) => [key, String(value)]),
+    )
 
     try {
-      const res = await fetch(WEB3FORMS_ENDPOINT, {
+      const res = await fetch(FORM_ACTION, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          access_key: ACCESS_KEY,
-          subject: `RFQ — ${selected || 'Dry red chilli'} — ${form.quantity} MT to ${form.country}`,
-          from_name: `${form.name} (${form.company})`,
-          replyto: form.email,
-          name: form.name,
-          company: form.company,
-          email: form.email,
-          phone: form.phone,
-          destination_country: form.country,
-          destination_port: form.port || '—',
-          varieties: selected,
-          quantity_mt: form.quantity,
-          preferred_packing: form.packing || '—',
-          incoterm: form.incoterm || '—',
-          sample_requested: form.sample ? 'Yes' : 'No',
-          message: form.message || '—',
-          botcheck: botcheckRef.current?.checked ? 'true' : '',
-        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
       })
-      const data = await res.json().catch(() => ({}))
-      setStatus(res.ok && data.success ? 'success' : 'error')
+      setStatus(res.ok ? 'success' : 'error')
     } catch {
       setStatus('error')
     }
@@ -219,18 +211,15 @@ export default function ContactPage() {
                 <form
                   onSubmit={handleSubmit}
                   noValidate
-                  // Native fallback: with JS off the browser posts straight to
-                  // Web3Forms and their page confirms it. The handler above
-                  // takes over whenever JS is available.
-                  action={WEB3FORMS_ENDPOINT}
+                  name={FORM_NAME}
                   method="POST"
+                  action={FORM_ACTION}
+                  data-netlify="true"
+                  netlify-honeypot="bot-field"
                 >
-                  <input type="hidden" name="access_key" value={ACCESS_KEY ?? ''} />
-                  <input
-                    type="hidden"
-                    name="subject"
-                    value="RFQ — dry red chilli — MAVEH WORLD website"
-                  />
+                  {/* Netlify matches the submission to the form by this field,
+                      on both the scripted and the native path. */}
+                  <input type="hidden" name="form-name" value={FORM_NAME} />
 
                   {status === 'error' && <ErrorBanner fallbackMessage={fallbackMessage} />}
 
@@ -478,16 +467,14 @@ export default function ContactPage() {
                     I&rsquo;d like a sample before ordering
                   </label>
 
-                  {/* Web3Forms honeypot — hidden from people, ticked by bots. */}
-                  <input
-                    ref={botcheckRef}
-                    type="checkbox"
-                    name="botcheck"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    className="hidden"
-                    aria-hidden
-                  />
+                  {/* Honeypot. Hidden from people, filled in by bots; Netlify
+                      discards anything that arrives with it set. */}
+                  <p className="hidden" aria-hidden>
+                    <label>
+                      Do not fill this in
+                      <input name="bot-field" tabIndex={-1} autoComplete="off" />
+                    </label>
+                  </p>
 
                   <Button type="submit" size="lg" className="mt-8 w-full sm:w-auto">
                     {status === 'submitting' ? 'Sending…' : 'Send enquiry'}

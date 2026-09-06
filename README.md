@@ -137,32 +137,35 @@ crop cannot hold, so the hero falls back to the flat navy gradient.
 Swapping in real product photography later is a change to `src/data/media.ts`
 plus a source file — `<HeroMedia>` takes the image as a prop.
 
-## Web3Forms key — REQUIRED for the quote form
+## Quote form
 
-**The quote form does not deliver email until this is set.** Vite inlines
-`VITE_`-prefixed variables at build time, so an unset key is baked into the
-bundle as an empty string; setting it afterwards on the host changes nothing
-until you rebuild. `npm run build` prints a warning when it is missing, and
-`npm run check:form` reports what a buyer actually experiences.
+The form on `/contact` uses **Netlify Forms**. There is no API key, no
+third-party account and no environment variable to set — it works as soon as
+the site is deployed to Netlify.
 
-Without a key the form degrades rather than dead-ends: the buyer sees "the form
-didn't send" and is offered WhatsApp and email links prefilled with everything
-they typed. Nothing is lost — but nothing reaches the inbox either, and every
-enquiry then depends on the buyer clicking again.
+Netlify discovers forms by parsing the HTML in the publish directory at deploy
+time. That only works here because the contact page is *prerendered*: the form
+markup is really in `dist/contact.html`, not assembled by JavaScript at runtime.
+If prerendering ever regressed, Netlify would find no form and submissions would
+404 — which is what `npm run check:form` exists to catch.
 
-1. Create a free access key at [web3forms.com](https://web3forms.com), entering
-   the inbox that should receive enquiries (e.g. `worldofmaveh@gmail.com`).
-2. Locally: copy `.env.example` to `.env` and paste the key.
+One POST serves both paths. With JavaScript, the page sends it and shows a
+confirmation in place; without it, the browser posts natively and Netlify
+returns the reader to `?sent=1`, which renders the same confirmation. If the
+send fails either way, the reader is offered WhatsApp and email links prefilled
+with everything they typed, so an enquiry is never lost.
 
-   ```
-   VITE_WEB3FORMS_KEY=your-access-key-here
-   ```
+**To receive submissions by email:** Netlify → **Site configuration → Forms →
+Form notifications → Add notification → Email notification**, pointed at
+`worldofmaveh@gmail.com`. Submissions are also listed in that panel regardless.
+The free tier covers 100 submissions per month.
 
-3. On Netlify: add the same variable under **Site settings → Environment
-   variables**, then trigger a redeploy so the build picks it up.
+If form detection is switched off for the site, enable it under **Site
+configuration → Forms** and redeploy.
 
-The form also posts natively via its `action` attribute, so it still works with
-JavaScript disabled — once a key is configured.
+```bash
+npm run check:form    # verifies registration + what a buyer actually experiences
+```
 
 ## The admin — adding and editing products
 
@@ -263,8 +266,8 @@ dev and preview servers are taught the same trick in `vite.config.ts`.
 
 **Option A — Git (required if the admin is used):** push this repo to GitHub,
 then in Netlify: **Add new site → Import an existing project**. Build settings
-are read from `netlify.toml` (build `npm run build`, publish `dist`). Add the
-`VITE_WEB3FORMS_KEY` environment variable, then deploy. Finish with the OAuth
+are read from `netlify.toml` (build `npm run build`, publish `dist`). Deploy — no environment
+variables are required. Finish with the OAuth
 step under [The admin](#the-admin--adding-and-editing-products) so the client
 can sign in at `/admin`.
 
