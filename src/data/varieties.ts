@@ -1,102 +1,221 @@
-import type { Variety } from './types'
+import type { Variety, VarietySeo } from './types'
 
-// Confirmed specifications supplied by the client. Edit values here — every page
-// and the compare table read from this array.
+// Varieties are content, not code.
 //
-// Placeholder fields (astaColour, aflatoxin) are null until the client supplies
-// real figures. Do NOT invent them. When null the UI renders nothing.
+// Each one is a JSON document in `content/varieties/`, which is what the admin
+// at `/admin` reads and writes. Adding a variety is adding a file there — this
+// module discovers it, `scripts/gen-pages.mjs` gives it a document and an entry,
+// and `scripts/prerender.mjs` renders it. Nothing here or in `src/pages` needs
+// touching for a new product.
+//
+// Fields typed `string | null` are CLIENT-SUPPLIED PLACEHOLDERS (astaColour,
+// aflatoxin). When the value is null the UI renders nothing — no filler, and no
+// invented figures.
 
+/** HSN tariff code. Site-wide, so it is not a per-variety field the CMS can desync. */
 export const HSN_CODE = '09042110'
 
-export const varieties: Variety[] = [
-  {
-    slug: 'teja',
-    name: 'Teja',
-    fullName: 'Teja (S17)',
-    summary:
-      'Very high pungency with bright red colour. The reference chilli for heat-driven products.',
-    pungency: 'Very high',
-    shuMin: 80000,
-    shuMax: 100000,
-    shuLabel: '80,000–100,000',
-    colour: 'Bright red',
-    moisture: '≤ 12%',
-    foreignMatter: 'Max 1%',
-    form: 'Stemless / with stem',
-    notes: null,
-    hsn: HSN_CODE,
-    bestSuitedFor:
-      'Best suited for hot sauce, oleoresin extraction and high-pungency spice blends.',
-    applications: ['Hot sauce', 'Oleoresin', 'Pungency blends'],
-    packing: ['5 kg PP bag', '25 kg PP bag', '50 kg PP bag', 'Jute bag', 'Vacuum pack'],
-    image: 'teja',
-    imageAlt:
-      'Teja pods in bulk — long, slender and tapering, with smooth glossy skin, an even scarlet red and short pale stems still attached.',
-    // TODO: client to supply ASTA colour value for Teja.
-    astaColour: null,
-    // TODO: client to supply aflatoxin limit + testing lab for Teja.
-    aflatoxin: null,
-  },
-  {
-    slug: 'byadgi',
-    name: 'Byadgi',
-    fullName: 'Byadgi',
-    summary:
-      'Low heat with high natural colour value. Chosen for colour rather than pungency.',
-    pungency: 'Low',
-    shuMin: 8000,
-    shuMax: 15000,
-    shuLabel: '8,000–15,000',
-    colour: 'Bright red, high natural colour value',
-    moisture: '≤ 12%',
-    foreignMatter: 'Max 1%',
-    form: 'Stemless / with stem',
-    notes: 'Excellent colour retention.',
-    hsn: HSN_CODE,
-    bestSuitedFor:
-      'Best suited for colour extraction, as a paprika substitute and for mild curry bases.',
-    applications: ['Colour extraction', 'Paprika substitute', 'Mild curry bases'],
-    packing: ['5 kg PP bag', '25 kg PP bag', '50 kg PP bag', 'Jute bag', 'Vacuum pack'],
-    image: 'byadgi',
-    imageAlt:
-      'Byadgi pods in bulk — broad and deeply wrinkled along their length, a dark crimson red with a matte surface, noticeably longer than Teja.',
-    // TODO: client to supply ASTA colour value for Byadgi.
-    astaColour: null,
-    // TODO: client to supply aflatoxin limit + testing lab for Byadgi.
-    aflatoxin: null,
-  },
-  {
-    slug: 'sannam',
-    name: 'Sannam',
-    fullName: 'Sannam (S4)',
-    summary:
-      'Medium-high heat with deep red colour. Uniform size, cleaned and machine sorted.',
-    pungency: 'Medium-high',
-    shuMin: 35000,
-    shuMax: 50000,
-    shuLabel: '35,000–50,000',
-    colour: 'Deep red',
-    moisture: '≤ 12%',
-    foreignMatter: 'Max 1%',
-    form: 'Stemless / with stem',
-    notes: 'Uniform size, cleaned and machine sorted.',
-    hsn: HSN_CODE,
-    bestSuitedFor:
-      'Best suited for general-purpose culinary use, with balanced heat and colour.',
-    applications: ['General culinary', 'Balanced heat', 'Deep colour'],
-    packing: ['5 kg PP bag', '25 kg PP bag', '50 kg PP bag', 'Jute bag', 'Vacuum pack'],
-    image: 'sannam',
-    imageAlt:
-      'Sannam S4 pods in bulk — uniform medium-length pods of even thickness, bright red with a lightly ridged skin and stems attached.',
-    // TODO: client to supply ASTA colour value for Sannam S4.
-    astaColour: null,
-    // TODO: client to supply aflatoxin limit + testing lab for Sannam S4.
-    aflatoxin: null,
-  },
-]
+/** Shape of a `content/varieties/*.json` document, before normalisation. */
+interface RawVariety {
+  order?: number
+  name: string
+  fullName: string
+  summary: string
+  pungency: string
+  shuMin: number
+  shuMax: number
+  /** Pre-formatted range. Derived from the bounds when left blank. */
+  shuLabel?: string | null
+  colour: string
+  moisture: string
+  foreignMatter: string
+  form: string
+  notes?: string | null
+  bestSuitedFor: string
+  applications: string[]
+  packing: string[]
+  /** Media path as the CMS stores it, e.g. `assets/products/teja.jpeg`. */
+  image: string
+  imageAlt: string
+  astaColour?: string | null
+  aflatoxin?: string | null
+  seo?: Partial<VarietySeo> | null
+}
 
-/** Upper bound of the Scale device axis, in SHU. Round number above the hottest variety. */
-export const SHU_AXIS_MAX = 100000
+const REQUIRED = [
+  'name',
+  'fullName',
+  'summary',
+  'pungency',
+  'shuMin',
+  'shuMax',
+  'colour',
+  'moisture',
+  'foreignMatter',
+  'form',
+  'bestSuitedFor',
+  'applications',
+  'packing',
+  'image',
+  'imageAlt',
+] as const satisfies readonly (keyof RawVariety)[]
+
+const files = import.meta.glob<{ default: RawVariety }>('/content/varieties/*.json', {
+  eager: true,
+})
+
+/**
+ * Absent, blank or whitespace-only → null.
+ *
+ * A CMS form writes `""` for a field the client left empty, never `null`. The
+ * UI's rule is that a null field renders nothing, so `""` has to be folded into
+ * null here or an empty string reaches the page as an empty table row.
+ */
+function nullable(value: string | null | undefined): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
+
+/** Drop blank entries a CMS list widget leaves behind. */
+function compact(values: string[]): string[] {
+  return values.map((v) => v.trim()).filter(Boolean)
+}
+
+/**
+ * "80,000–100,000" from the bounds.
+ *
+ * Deriving it means the range under the heading cannot disagree with the range
+ * the Scoville scale is drawn from. A variety needing wording the numbers
+ * cannot express ("Above 100,000") can still set `shuLabel` explicitly.
+ */
+function shuRange(min: number, max: number): string {
+  return `${min.toLocaleString('en-US')}–${max.toLocaleString('en-US')}`
+}
+
+/** `/content/varieties/teja.json` → `teja`. The filename is the URL. */
+function slugFromPath(path: string): string {
+  return path.slice(path.lastIndexOf('/') + 1).replace(/\.json$/, '')
+}
+
+/**
+ * `assets/products/teja.jpeg` → `teja`.
+ *
+ * The CMS stores a real media path because that is what its image widget knows
+ * how to produce; the image pipeline and `ProductImage` both work in stems. The
+ * translation happens once, here, so neither side has to know about the other.
+ *
+ * The name is also made URL-safe. A photograph uploaded straight off a phone
+ * arrives as `IMG 2231.JPEG`, and a space in a derivative's filename would end
+ * up in a `srcset`, where the space is the delimiter — the whole attribute
+ * would parse wrong and no image would load.
+ *
+ * MIRRORED by `stemOf()` in scripts/build-images.mjs, which names the files
+ * this function expects to find. The two must agree.
+ */
+function imageStem(value: string): string {
+  const base = value.slice(value.lastIndexOf('/') + 1)
+  const dot = base.lastIndexOf('.')
+  const name = dot === -1 ? base : base.slice(0, dot)
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/**
+ * SEO copy is optional in the document. Left blank, it is composed from the
+ * specification — which is the same information a hand-written description
+ * would carry, and cannot drift from the figures on the page.
+ */
+function resolveSeo(
+  variety: Omit<Variety, 'seo'>,
+  seo: Partial<VarietySeo> | null | undefined,
+): VarietySeo {
+  const { fullName, shuLabel, colour, moisture, bestSuitedFor } = variety
+  const title = `${fullName} Dry Red Chilli — Specification | MAVEH WORLD`
+  const description =
+    `${fullName} dry red chilli: ${shuLabel} SHU, ${colour.toLowerCase()}, ` +
+    `moisture ${moisture}. ${bestSuitedFor} HSN ${HSN_CODE}.`
+  const ogDescription = `${fullName}: ${shuLabel} SHU, ${colour.toLowerCase()}.`
+
+  return {
+    title: nullable(seo?.title) ?? title,
+    description: nullable(seo?.description) ?? description,
+    ogDescription: nullable(seo?.ogDescription) ?? nullable(seo?.description) ?? ogDescription,
+  }
+}
+
+/**
+ * A malformed document fails the build rather than shipping a page with holes
+ * in it. The CMS writes these files, so the failure needs to name the file and
+ * the field plainly enough to fix from the admin UI.
+ */
+function toVariety(slug: string, raw: RawVariety): Variety {
+  for (const field of REQUIRED) {
+    const value = raw[field]
+    if (value === undefined || value === null || value === '') {
+      throw new Error(`content/varieties/${slug}.json: "${field}" is required`)
+    }
+  }
+  if (!(raw.shuMax > raw.shuMin)) {
+    throw new Error(`content/varieties/${slug}.json: shuMax must be greater than shuMin`)
+  }
+  if (compact(raw.applications).length === 0) {
+    throw new Error(`content/varieties/${slug}.json: "applications" needs at least one entry`)
+  }
+  if (compact(raw.packing).length === 0) {
+    throw new Error(`content/varieties/${slug}.json: "packing" needs at least one entry`)
+  }
+
+  const variety: Omit<Variety, 'seo'> = {
+    slug,
+    order: raw.order ?? 999,
+    name: raw.name.trim(),
+    fullName: raw.fullName.trim(),
+    summary: raw.summary.trim(),
+    pungency: raw.pungency.trim(),
+    shuMin: raw.shuMin,
+    shuMax: raw.shuMax,
+    shuLabel: nullable(raw.shuLabel) ?? shuRange(raw.shuMin, raw.shuMax),
+    colour: raw.colour.trim(),
+    moisture: raw.moisture.trim(),
+    foreignMatter: raw.foreignMatter.trim(),
+    form: raw.form.trim(),
+    notes: nullable(raw.notes),
+    hsn: HSN_CODE,
+    bestSuitedFor: raw.bestSuitedFor.trim(),
+    applications: compact(raw.applications),
+    packing: compact(raw.packing),
+    image: imageStem(raw.image),
+    imageAlt: raw.imageAlt.trim(),
+    astaColour: nullable(raw.astaColour),
+    aflatoxin: nullable(raw.aflatoxin),
+  }
+
+  return { ...variety, seo: resolveSeo(variety, raw.seo) }
+}
+
+/**
+ * Every variety, in the order the client set. `order` ties are broken by name
+ * so the sequence is stable between builds — an unstable order would reshuffle
+ * the products grid and the footer on an unrelated deploy.
+ */
+export const varieties: Variety[] = Object.entries(files)
+  .map(([path, mod]) => toVariety(slugFromPath(path), mod.default))
+  .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+
+if (varieties.length === 0) {
+  throw new Error('No varieties found in content/varieties/*.json')
+}
+
+/**
+ * Top of the Scoville axis for the comparison scale.
+ *
+ * Derived from the hottest variety on file rather than fixed, so a chilli added
+ * through the admin that out-heats Teja widens the axis instead of running off
+ * the end of it.
+ */
+export const SHU_AXIS_MAX = Math.max(...varieties.map((v) => v.shuMax))
 
 export function getVariety(slug: string): Variety | undefined {
   return varieties.find((v) => v.slug === slug)

@@ -1,0 +1,36 @@
+{
+  "order": 2,
+  "name": "Byadgi",
+  "fullName": "Byadgi",
+  "summary": "Low heat with high natural colour value. Chosen for colour rather than pungency.",
+  "pungency": "Low",
+  "shuMin": 8000,
+  "shuMax": 15000,
+  "colour": "Bright red, high natural colour value",
+  "moisture": "≤ 12%",
+  "foreignMatter": "Max 1%",
+  "form": "Stemless / with stem",
+  "notes": "Excellent colour retention.",
+  "bestSuitedFor": "Best suited for colour extraction, as a paprika substitute and for mild curry bases.",
+  "applications": [
+    "Colour extraction",
+    "Paprika substitute",
+    "Mild curry bases"
+  ],
+  "packing": [
+    "5 kg PP bag",
+    "25 kg PP bag",
+    "50 kg PP bag",
+    "Jute bag",
+    "Vacuum pack"
+  ],
+  "image": "assets/products/byadgi.jpeg",
+  "imageAlt": "Byadgi pods in bulk — broad and deeply wrinkled along their length, a dark crimson red with a matte surface, noticeably longer than Teja.",
+  "astaColour": null,
+  "aflatoxin": null,
+  "seo": {
+    "title": "Byadgi Dry Red Chilli — Specification | MAVEH WORLD",
+    "description": "Byadgi dry red chilli: 8,000–15,000 SHU, high natural colour value, moisture below 12%. For colour extraction, paprika substitute and mild curry bases. HSN 09042110.",
+    "ogDescription": "Byadgi: 8,000–15,000 SHU, high natural colour value. For colour extraction and mild curry bases."
+  }
+}

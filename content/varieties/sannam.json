@@ -1,0 +1,36 @@
+{
+  "order": 3,
+  "name": "Sannam",
+  "fullName": "Sannam (S4)",
+  "summary": "Medium-high heat with deep red colour. Uniform size, cleaned and machine sorted.",
+  "pungency": "Medium-high",
+  "shuMin": 35000,
+  "shuMax": 50000,
+  "colour": "Deep red",
+  "moisture": "≤ 12%",
+  "foreignMatter": "Max 1%",
+  "form": "Stemless / with stem",
+  "notes": "Uniform size, cleaned and machine sorted.",
+  "bestSuitedFor": "Best suited for general-purpose culinary use, with balanced heat and colour.",
+  "applications": [
+    "General culinary",
+    "Balanced heat",
+    "Deep colour"
+  ],
+  "packing": [
+    "5 kg PP bag",
+    "25 kg PP bag",
+    "50 kg PP bag",
+    "Jute bag",
+    "Vacuum pack"
+  ],
+  "image": "assets/products/sannam.jpeg",
+  "imageAlt": "Sannam S4 pods in bulk — uniform medium-length pods of even thickness, bright red with a lightly ridged skin and stems attached.",
+  "astaColour": null,
+  "aflatoxin": null,
+  "seo": {
+    "title": "Sannam (S4) Dry Red Chilli — Specification | MAVEH WORLD",
+    "description": "Sannam S4 dry red chilli: 35,000–50,000 SHU, deep red, uniform size, moisture below 12%. Balanced heat and colour for general culinary use. HSN 09042110.",
+    "ogDescription": "Sannam (S4): 35,000–50,000 SHU, deep red, uniform size. Balanced heat and colour."
+  }
+}

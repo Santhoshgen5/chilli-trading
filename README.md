@@ -12,6 +12,8 @@ no checkout, no accounts.
 - **Tailwind CSS** — all design tokens live in `tailwind.config.js`
 - **framer-motion** — scroll triggers and counters, imported per component
 - **Web3Forms** for the quote form (no backend)
+- **Sveltia CMS** at `/admin` for products — Git-backed, so still no backend and
+  no database: a save is a commit, and the commit is what publishes
 - Deploy target: **Netlify**
 
 Fonts are self-hosted via `@fontsource` (Space Grotesk display, IBM Plex Sans
@@ -31,25 +33,43 @@ There is **no client-side router**. Every route is its own HTML document:
   copy of the markup anywhere.
 - Navigation is plain `<a href>`.
 
-Pages are discovered by convention: a route key in `src/lib/routes.ts` maps to
-`src/pages/<Key>.tsx`. Routes with no page file yet are skipped with a note, so
-the build stays green while pages are still being added.
+There are two kinds of page.
+
+**Static pages** are discovered by convention: a route key in `src/lib/routes.ts`
+maps to `src/pages/<Key>.tsx`. Routes with no page file yet are skipped with a
+note, so the build stays green while pages are still being added.
 
 | URL | Entry | Page component |
 |---|---|---|
 | `/` | `index.html` | `src/pages/Home.tsx` |
 | `/products` | `products.html` | `src/pages/Products.tsx` |
-| `/teja` | `teja.html` | `src/pages/Teja.tsx` |
-| `/byadgi` | `byadgi.html` | `src/pages/Byadgi.tsx` |
-| `/sannam` | `sannam.html` | `src/pages/Sannam.tsx` |
 | `/quality` | `quality.html` | `src/pages/Quality.tsx` |
 | `/packaging` | `packaging.html` | `src/pages/Packaging.tsx` |
 | `/about` | `about.html` | `src/pages/About.tsx` |
 | `/markets` | `markets.html` | `src/pages/Markets.tsx` |
 | `/contact` | `contact.html` | `src/pages/Contact.tsx` |
 
-The three variety pages are thin wrappers around `src/components/VarietyPage.tsx`
-— the layout is shared and only the data differs.
+**Product pages** have no component and no route entry of their own. Each one is
+a JSON document in `content/varieties/`, and everything else is derived from it:
+
+```
+content/varieties/teja.json          the product — edited here or at /admin
+        │
+        ├─ npm run pages   →  teja.html                 document + JSON-LD
+        │                     src/entries/teja.tsx      hydration entry
+        ├─ npm run images  →  public/media/products/…   image derivatives
+        └─ prerender       →  VarietyPage bound to the data, written into #root
+```
+
+So adding a product is adding a content file and a photograph. Its page, its
+card in the products grid, its link in the footer, its place on the Scoville
+scale, its sitemap entry and its cross-links from the other products all follow.
+No code changes, no route to register. Deleting the file removes all of it —
+`npm run pages` prunes the generated document and entry.
+
+`teja.html` and `src/entries/teja.tsx` are **generated**, marked `@generated`,
+and rewritten on every build. They are committed so a fresh clone can run
+`npm run dev` without a build first — but never edit them; edit the JSON.
 
 Because animations must never hide content from a reader without JS, scroll
 reveals keep their *start* state in CSS under `html.js-reveal` — a class set by
@@ -68,10 +88,11 @@ npm run dev               # http://localhost:5173
 Other scripts:
 
 ```bash
-npm run build             # images + type-check + build + prerender → dist/
+npm run build             # images + pages + type-check + build + prerender → dist/
 npm run preview           # preview the production build locally
 npm run typecheck         # type-check only
 npm run images            # rebuild image derivatives from assets/
+npm run pages             # regenerate product documents from content/varieties/
 
 # Checks — run these against a running `npm run preview`
 npm run audit                       # every route, three breakpoints
@@ -137,19 +158,65 @@ a free access key.
 If the key is missing or the request fails, the form does **not** dead-end — it
 shows the buyer a WhatsApp/email fallback prefilled with their details.
 
-## Editing content
+## The admin — adding and editing products
 
-All product and company copy lives in `src/data/` as typed objects. **Do not edit
-copy inside components** — change it here in one place.
+The site has a content admin at **`/admin`**, running
+[Sveltia CMS](https://sveltiacms.app). It is Git-backed: there is no database
+and no server to run or pay for.
+
+Signing in with GitHub and saving a product writes
+`content/varieties/<slug>.json` and commits the photograph to
+`assets/products/`. Netlify sees the commit, runs `npm run build`, and the build
+publishes the page. So:
+
+- every change has an author, a timestamp and a one-click revert;
+- a save is **not instant** — the page appears when the build finishes, usually
+  one to two minutes;
+- the client never touches code, and nothing about the prerendering or the SEO
+  is given up to get that.
+
+### One-time setup: GitHub sign-in
+
+The admin needs an OAuth app so the client can sign in. Netlify hosts the OAuth
+side, so there is nothing to deploy.
+
+1. **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App.**
+   - Homepage URL: the site's URL.
+   - Authorization callback URL: `https://api.netlify.com/auth/done`
+   - Note the **Client ID** and generate a **Client Secret**.
+2. **Netlify → Site configuration → Access control → OAuth → Install provider.**
+   Choose GitHub and paste the Client ID and Secret.
+3. Give the client **write access to the repository** (`Santhoshgen5/chilli-trading`).
+   Repository access *is* admin access — there is no separate user list.
+4. Visit `/admin` and sign in.
+
+If the repository is ever renamed or moved, update `repo:` in
+`public/admin/config.yml`.
+
+### Editing content in code
+
+Company copy still lives in `src/data/` as typed objects. **Do not edit copy
+inside components** — change it here in one place.
 
 | File | What it holds |
 |---|---|
-| `src/data/varieties.ts` | The three varieties: specs, SHU ranges, applications, packing, HSN. |
+| `content/varieties/*.json` | One file per product. Owned by the admin; editable by hand. |
+| `src/data/varieties.ts` | Loads, validates and normalises those files. Holds `HSN_CODE`. |
 | `src/data/company.ts` | Contact details, address, compliance, process steps, markets, MOQ, Incoterms. |
 | `src/data/types.ts` | The shapes for the above (edit only when adding a new field). |
 
-Editing is plain data. For example, to correct Teja's colour, change the
-`colour` field in `varieties.ts` — every page and the compare table update.
+A few product fields are **derived, not stored**, so they cannot drift:
+
+- `hsn` — one site-wide constant in `varieties.ts`, not a per-product field.
+- `shuLabel` — written from `shuMin`/`shuMax` unless explicitly set, so the
+  printed range always matches the range the heat scale is drawn from.
+- the Scoville axis — the top of the scale is the hottest product on file, so a
+  new product hotter than Teja widens the axis instead of overflowing it.
+- `<title>` and meta description — composed from the specification unless the
+  `seo` fields are filled in.
+
+A malformed content file **fails the build** with the filename and the field
+named, rather than publishing a page with holes in it.
 
 ### Placeholders (client has not supplied these yet)
 
@@ -157,24 +224,27 @@ These are intentionally left empty and marked `TODO:` in the data files. The UI
 **renders nothing** where they are missing (no filler). Fill in the real value
 and it appears automatically:
 
-- **ASTA colour value** per variety → `varieties.ts` → `astaColour`
-- **Aflatoxin limit + testing lab** per variety → `varieties.ts` → `aflatoxin`
+- **ASTA colour value** per variety → the product's `astaColour` field (in `/admin`, or `content/varieties/<slug>.json`)
+- **Aflatoxin limit + testing lab** per variety → the product's `aflatoxin` field
 - **Spices Board CRES registration number** → `company.ts` → `compliance` (set `value`, `confirmed: true`)
 - **FSSAI licence number** → `company.ts` → `compliance`
 - **Ports of loading / transit times** → `company.ts` → `ports`
 - **LinkedIn URL** → `company.ts` → `linkedin`
-- **Real photography** → drop source files into `assets/`, add a descriptor to `src/data/media.ts`, run `npm run images`. `<HeroMedia>` takes its image as a prop, and `<Placeholder>` blocks elsewhere are sized to the final layout, so swapping them for `<img>` does not move anything.
+- **Real photography** → for products, upload it in `/admin` (or drop a file into `assets/products/` — the pipeline discovers whatever is there). For the hero and other art, drop source files into `assets/`, add a descriptor to `src/data/media.ts` and run `npm run images`; `<HeroMedia>` takes its image as a prop.
+- **Facility, warehouse and packing photography** → there is no slot standing empty for it. The dashed placeholder blocks on About, Quality and Packaging were removed; add a figure to those sections when real photographs exist.
 - **Open Graph image** → `public/og-default.svg` is a branded placeholder. For best social-preview support, replace it with a 1200×630 **PNG/JPG** and update the `og:image` reference in `index.html`.
 
 ### Domain
 
 The production domain is set to `https://www.mavehworld.com` as a placeholder in:
 
-- each `.html` entry (canonical + OG)
+- each hand-written `.html` entry (canonical + OG)
 - `src/data/company.ts` → `siteUrl`
 - `public/robots.txt`
+- `public/admin/config.yml` → `site_url`, `display_url`
 
-Update all three when the real domain is confirmed. `sitemap.xml` is generated
+Update these when the real domain is confirmed. The generated product documents
+take their canonical and OG URLs from `siteUrl`, so they need no edit. `sitemap.xml` is generated
 at build time from `siteUrl` and the pages that actually rendered, so it needs
 no edit — and cannot drift out of step with the routes.
 
@@ -185,10 +255,15 @@ no edit — and cannot drift out of step with the routes.
 the homepage. Netlify serves `products.html` at `/products` on its own, and the
 dev and preview servers are taught the same trick in `vite.config.ts`.
 
-**Option A — Git (recommended):** push this repo to GitHub/GitLab, then in
-Netlify: **Add new site → Import an existing project**. Build settings are read
-from `netlify.toml` (build `npm run build`, publish `dist`). Add the
-`VITE_WEB3FORMS_KEY` environment variable, then deploy.
+**Option A — Git (required if the admin is used):** push this repo to GitHub,
+then in Netlify: **Add new site → Import an existing project**. Build settings
+are read from `netlify.toml` (build `npm run build`, publish `dist`). Add the
+`VITE_WEB3FORMS_KEY` environment variable, then deploy. Finish with the OAuth
+step under [The admin](#the-admin--adding-and-editing-products) so the client
+can sign in at `/admin`.
+
+This has to be the Git deploy: the admin publishes by committing, so a site
+deployed from the CLI would never rebuild when the client saves a product.
 
 **Option B — CLI:**
 

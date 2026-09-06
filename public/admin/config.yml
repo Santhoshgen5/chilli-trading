@@ -1,0 +1,192 @@
+# Admin configuration — Sveltia CMS, served at /admin.
+#
+# This is a Git-backed CMS: there is no database and no server. Saving a product
+# commits content/varieties/<slug>.json to `main` and uploads its photograph to
+# assets/products/. Netlify sees the commit, runs `npm run build`, and the build
+# generates the product's page, its image derivatives and its sitemap entry.
+#
+# Consequences worth knowing before editing this file:
+#
+#  · A save is a commit. Every change has an author, a timestamp and a revert.
+#  · A save is not instant. The page appears when the build finishes, usually
+#    one to two minutes.
+#  · The field names below are the JSON keys read by src/data/varieties.ts.
+#    Renaming one here without renaming it there fails the build.
+
+backend:
+  name: github
+  repo: Santhoshgen5/chilli-trading
+  branch: main
+
+# Where uploaded photographs are committed. This is *source* art, not what the
+# site serves: `npm run images` discovers everything in this folder and emits
+# the AVIF/WebP/JPEG derivatives under /media/products. So upload the largest
+# version available — the pipeline does the resizing.
+media_folder: assets/products
+public_folder: assets/products
+
+site_url: https://www.mavehworld.com
+display_url: https://www.mavehworld.com
+
+collections:
+  - name: varieties
+    label: Products
+    label_singular: Product
+    description: >-
+      Each product is one page on the site. Adding one here creates its page,
+      its entry in the products grid, the footer and the sitemap, and its place
+      on the Scoville comparison scale. Nothing else needs changing.
+    folder: content/varieties
+    extension: json
+    format: json
+    create: true
+    delete: true
+    # The filename is the URL: `teja.json` is served at /teja. It comes from the
+    # name, so a product called "Kashmiri" lands at /kashmiri.
+    identifier_field: name
+    slug: '{{slug}}'
+    summary: '{{name}} · {{shuMin}}–{{shuMax}} SHU'
+    sortable_fields: [order, name, shuMax]
+    fields:
+      - name: order
+        label: Sort position
+        widget: number
+        value_type: int
+        min: 1
+        default: 99
+        hint: Lower numbers come first, everywhere the products are listed.
+
+      - name: name
+        label: Name
+        widget: string
+        hint: Short name, e.g. "Teja". This also sets the page URL.
+
+      - name: fullName
+        label: Full name
+        widget: string
+        hint: Name with grade, e.g. "Teja (S17)". Used in headings and titles.
+
+      - name: summary
+        label: Summary
+        widget: text
+        hint: One line, from the buyer's point of view. Shown on the product card.
+
+      - name: pungency
+        label: Pungency
+        widget: select
+        options: [Low, Medium, Medium-high, High, Very high]
+
+      - name: shuMin
+        label: Scoville — lowest
+        widget: number
+        value_type: int
+        min: 0
+        hint: Just the number, e.g. 80000.
+
+      - name: shuMax
+        label: Scoville — highest
+        widget: number
+        value_type: int
+        min: 0
+        hint: Must be higher than the lowest. This also positions the product on the heat scale.
+
+      - name: shuLabel
+        label: Scoville — displayed range
+        widget: string
+        required: false
+        hint: >-
+          Leave blank. The range is written from the two numbers above, so it
+          cannot disagree with them. Fill this in only for wording the numbers
+          cannot express, such as "Above 100,000".
+
+      - name: colour
+        label: Colour
+        widget: string
+        hint: e.g. "Bright red" or "Deep red, high natural colour value".
+
+      - name: moisture
+        label: Moisture
+        widget: string
+        hint: e.g. "≤ 12%".
+
+      - name: foreignMatter
+        label: Foreign matter
+        widget: string
+        hint: e.g. "Max 1%".
+
+      - name: form
+        label: Form
+        widget: string
+        hint: e.g. "Stemless / with stem".
+
+      - name: notes
+        label: Note
+        widget: text
+        required: false
+        hint: Anything specific to this variety. Leave blank and nothing is shown.
+
+      - name: bestSuitedFor
+        label: Best suited for
+        widget: text
+        hint: A full sentence. Appears as the lead paragraph on the product page.
+
+      - name: applications
+        label: Applications
+        widget: list
+        min: 1
+        hint: Short tags, one per line, e.g. "Hot sauce". Shown as chips.
+
+      - name: packing
+        label: Available packing
+        widget: list
+        min: 1
+        hint: >-
+          Bag and pack formats, e.g. "25 kg PP bag". Do not put the minimum
+          order quantity here — it is stated separately on the page.
+
+      - name: image
+        label: Photograph
+        widget: image
+        choose_url: false
+        hint: >-
+          Upload the largest version you have. It is resized and re-encoded
+          automatically. A linked web address will not work — the file has to
+          be in the repository for the build to process it.
+
+      - name: imageAlt
+        label: Photograph description
+        widget: text
+        hint: >-
+          Describe the pods — shape, colour, surface — for readers who cannot
+          see the image. Never "chilli photo", and never a claim that this is
+          our own stock or facility.
+
+      - name: astaColour
+        label: ASTA colour value
+        widget: string
+        required: false
+        hint: Leave blank until a figure is confirmed. Blank means the row is not shown at all.
+
+      - name: aflatoxin
+        label: Aflatoxin limit
+        widget: string
+        required: false
+        hint: Leave blank until a limit and testing lab are confirmed.
+
+      - name: seo
+        label: Search engine listing
+        widget: object
+        required: false
+        collapsed: true
+        hint: >-
+          Optional. Left blank, the title and description are written from the
+          specification above, which is usually what you want.
+        fields:
+          - { name: title, label: Page title, widget: string, required: false }
+          - { name: description, label: Description, widget: text, required: false }
+          - {
+              name: ogDescription,
+              label: Short description for link previews,
+              widget: text,
+              required: false,
+            }

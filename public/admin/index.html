@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      The admin is a tool, not a page of the site. It carries no site chrome, no
+      analytics and no share tags, and it is kept out of the index — both here
+      and in public/robots.txt, since a login screen in search results is only
+      ever noise.
+    -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Products — MAVEH WORLD</title>
+
+    <!--
+      Sveltia CMS. It is a Git-backed editor: signing in with GitHub, saving a
+      product writes content/varieties/<slug>.json and uploads its photograph to
+      assets/products/ as a commit on `main`. That commit is what triggers the
+      Netlify build, and the build is what publishes the page — so a save takes
+      a minute or two to appear, and every change has an author and a history.
+
+      There is no database and no server. See public/admin/config.yml.
+    -->
+    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
+  </head>
+  <body></body>
+</html>

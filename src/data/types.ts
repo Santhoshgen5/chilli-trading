@@ -4,10 +4,28 @@
 // Fields typed `string | null` are CLIENT-SUPPLIED PLACEHOLDERS. When the value
 // is null the UI renders nothing (no filler). See TODO markers in the data files.
 
-export type VarietySlug = 'teja' | 'byadgi' | 'sannam'
+/**
+ * A variety's URL segment. Open rather than a union: varieties are content
+ * files under `content/varieties/`, added through the admin, so the set is not
+ * known at compile time.
+ */
+export type VarietySlug = string
+
+/** Per-variety document metadata, used to generate the page's `<head>`. */
+export interface VarietySeo {
+  /** `<title>` and `og:title`. */
+  title: string
+  /** Meta description. */
+  description: string
+  /** Shorter description for `og:description`. */
+  ogDescription: string
+}
 
 export interface Variety {
+  /** URL segment, taken from the content filename. */
   slug: VarietySlug
+  /** Sort position across the site. Ties break by name. */
+  order: number
   /** Display name, e.g. "Teja" */
   name: string
   /** Full label used in titles, e.g. "Teja (S17)" */
@@ -44,8 +62,11 @@ export interface Variety {
   /**
    * Image stem under `/media/products`, without crop, width or extension.
    * `npm run images` emits `<image>-card-<w>` and `<image>-detail-<w>` from
-   * `assets/products/<image>.jpeg`, so swapping a photograph is a change to
-   * the source file and this one field.
+   * `assets/products/<image>.<ext>`, so swapping a photograph is a change to
+   * the source file alone.
+   *
+   * The content file stores a full media path (`assets/products/teja.jpeg`) —
+   * what the CMS image widget produces — and the loader reduces it to a stem.
    *
    * PROVISIONAL: these illustrate the variety only. They are not photographs
    * of MAVEH WORLD's own stock, facility or packing line, and must never be
@@ -64,6 +85,10 @@ export interface Variety {
   astaColour: string | null
   /** Aflatoxin limit + testing lab. TODO: client to supply. */
   aflatoxin: string | null
+
+  // --- Document metadata ---
+  /** Resolved `<head>` copy. Composed from the specification where not written. */
+  seo: VarietySeo
 }
 
 export interface ComplianceItem {

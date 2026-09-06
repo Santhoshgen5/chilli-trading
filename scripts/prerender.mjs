@@ -9,9 +9,14 @@
 // One source of truth is preserved: the same components produce the static
 // HTML and then hydrate on top of it. There is no parallel copy of the markup.
 //
-// Pages are discovered by convention — a route key in `src/lib/routes.ts` maps
-// to `src/pages/<Key>.tsx`. Routes whose page file does not exist yet are
-// skipped with a note, so the build stays green while pages are still landing.
+// Two kinds of page are rendered:
+//
+//  · Static pages are discovered by convention — a key in `routes` maps to
+//    `src/pages/<Key>.tsx`. Routes whose page file does not exist yet are
+//    skipped with a note, so the build stays green while pages are landing.
+//  · Variety pages have no component of their own. Each is `VarietyPage` bound
+//    to one document from `content/varieties/`, which is why adding a product
+//    needs no code — see scripts/gen-pages.mjs, which writes their documents.
 
 import { createServer } from 'vite'
 import { renderToString } from 'react-dom/server'
@@ -63,34 +68,56 @@ let skipped = 0
 const live = []
 
 try {
-  const { routes } = await server.ssrLoadModule('/src/lib/routes.ts')
+  const { routes, varietyRoutes } = await server.ssrLoadModule('/src/lib/routes.ts')
   const { company } = await server.ssrLoadModule('/src/data/company.ts')
+  const { varieties } = await server.ssrLoadModule('/src/data/varieties.ts')
+
+  // The work list, built before anything is written so a missing static page
+  // and a missing variety document are reported the same way.
+  const jobs = []
 
   for (const [key, route] of Object.entries(routes)) {
     const pageFile = `src/pages/${capitalise(key)}.tsx`
-    const htmlFile = resolve(DIST, route.file)
-
     if (!existsSync(resolve(ROOT, pageFile))) {
       process.stdout.write(`  – ${route.file.padEnd(16)} no ${pageFile} yet, skipped\n`)
       skipped++
       continue
     }
+    jobs.push({
+      route,
+      async element() {
+        const mod = await server.ssrLoadModule(`/${pageFile}`)
+        if (typeof mod.default !== 'function') {
+          throw new Error(`${pageFile} must have a default-exported component`)
+        }
+        return createElement(mod.default)
+      },
+    })
+  }
+
+  if (varieties.length > 0) {
+    const { VarietyPage } = await server.ssrLoadModule('/src/components/VarietyPage.tsx')
+    for (const variety of varieties) {
+      jobs.push({
+        route: varietyRoutes[variety.slug],
+        element: () => createElement(VarietyPage, { variety }),
+      })
+    }
+  }
+
+  for (const job of jobs) {
+    const { route } = job
+    const htmlFile = resolve(DIST, route.file)
 
     if (!existsSync(htmlFile)) {
       process.stdout.write(
-        `  – ${route.file.padEnd(16)} not in dist — add it to the project root\n`,
+        `  – ${route.file.padEnd(16)} not in dist — run \`npm run pages\` before the build\n`,
       )
       skipped++
       continue
     }
 
-    const mod = await server.ssrLoadModule(`/${pageFile}`)
-    const Page = mod.default
-    if (typeof Page !== 'function') {
-      throw new Error(`${pageFile} must have a default-exported component`)
-    }
-
-    const markup = renderToString(createElement(Page))
+    const markup = renderToString(await job.element())
     const html = await readFile(htmlFile, 'utf8')
 
     if (!html.includes(ROOT_DIV)) {
@@ -98,7 +125,7 @@ try {
     }
 
     const withMarkup = html.replace(ROOT_DIV, `<div id="root">${markup}</div>`)
-    const { html: finalHtml, inlined } = await inlineStylesheet(withMarkup)
+    const { html: finalHtml } = await inlineStylesheet(withMarkup)
     await writeFile(htmlFile, finalHtml, 'utf8')
 
     const kb = (Buffer.byteLength(markup) / 1024).toFixed(1)
@@ -109,7 +136,8 @@ try {
 
   // Sitemap, built from the pages that actually rendered. Generating it here
   // rather than keeping a hand-written copy in public/ means it can never list
-  // a URL that does not exist, or miss one that does.
+  // a URL that does not exist, or miss one that does — including the variety
+  // pages, which nobody registers by hand.
   const origin = String(company.siteUrl).replace(/\/$/, '')
   const urls = live
     .map((route) => {

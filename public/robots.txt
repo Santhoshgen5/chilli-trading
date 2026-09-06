@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
+# The content admin. Not a page of the site — a login screen in search results
+# is only noise, and the pages it edits are indexed on their own.
+Disallow: /admin
+
 Sitemap: https://www.mavehworld.com/sitemap.xml

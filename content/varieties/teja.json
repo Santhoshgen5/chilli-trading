@@ -1,0 +1,36 @@
+{
+  "order": 1,
+  "name": "Teja",
+  "fullName": "Teja (S17)",
+  "summary": "Very high pungency with bright red colour. The reference chilli for heat-driven products.",
+  "pungency": "Very high",
+  "shuMin": 80000,
+  "shuMax": 100000,
+  "colour": "Bright red",
+  "moisture": "≤ 12%",
+  "foreignMatter": "Max 1%",
+  "form": "Stemless / with stem",
+  "notes": null,
+  "bestSuitedFor": "Best suited for hot sauce, oleoresin extraction and high-pungency spice blends.",
+  "applications": [
+    "Hot sauce",
+    "Oleoresin",
+    "Pungency blends"
+  ],
+  "packing": [
+    "5 kg PP bag",
+    "25 kg PP bag",
+    "50 kg PP bag",
+    "Jute bag",
+    "Vacuum pack"
+  ],
+  "image": "assets/products/teja.jpeg",
+  "imageAlt": "Teja pods in bulk — long, slender and tapering, with smooth glossy skin, an even scarlet red and short pale stems still attached.",
+  "astaColour": null,
+  "aflatoxin": null,
+  "seo": {
+    "title": "Teja (S17) Dry Red Chilli — Specification | MAVEH WORLD",
+    "description": "Teja (S17) dry red chilli: 80,000–100,000 SHU, bright red, moisture below 12%. For hot sauce, oleoresin extraction and high-pungency blends. HSN 09042110.",
+    "ogDescription": "Teja (S17): 80,000–100,000 SHU, bright red. For hot sauce, oleoresin and high-pungency blends."
+  }
+}

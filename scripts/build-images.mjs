@@ -12,7 +12,7 @@
 //   media/logo-*            the stacked lockup, for the footer
 
 import sharp from 'sharp'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, readdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -160,7 +160,48 @@ async function heroMobile() {
 // variety: 4:3 for the card lead-in, 4:5 for the sticky column on the detail
 // page. JPEG is emitted alongside AVIF and WebP as a last-resort fallback.
 
-const PRODUCTS = ['teja', 'byadgi', 'sannam']
+// Discovered, not listed. A photograph dropped into assets/products/ — by hand
+// or by the admin's media upload — gets its derivatives on the next build, and
+// the variety document that names it needs no change here.
+const PRODUCT_SOURCE = /\.(jpe?g|png|webp|tiff?)$/i
+
+/**
+ * Source filename → the stem its derivatives are named with.
+ *
+ * Made URL-safe, because a photograph uploaded through the admin arrives named
+ * whatever the client's phone called it — `IMG 2231.JPEG` — and a space in a
+ * derivative's filename would land in a `srcset`, where the space is the
+ * delimiter, and break the whole attribute.
+ *
+ * MIRRORED by `imageStem()` in src/data/varieties.ts, which is what asks for
+ * these files by name. The two must agree.
+ */
+function stemOf(file) {
+  return file
+    .replace(/\.[^.]+$/, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+async function productSources() {
+  const dir = resolve(ROOT, 'assets/products')
+  const files = (await readdir(dir)).filter((f) => PRODUCT_SOURCE.test(f)).sort()
+
+  const seen = new Map()
+  return files.map((file) => {
+    const slug = stemOf(file)
+    if (seen.has(slug)) {
+      throw new Error(
+        `assets/products: "${file}" and "${seen.get(slug)}" both reduce to "${slug}" — ` +
+          `their derivatives would overwrite each other. Rename one.`,
+      )
+    }
+    seen.set(slug, file)
+    return { slug, src: resolve(dir, file) }
+  })
+}
+
 const PRODUCT_WIDTHS = [480, 768, 1200]
 const CROPS = [
   { name: 'card', ratio: 4 / 3 },
@@ -194,8 +235,7 @@ export const PRODUCT_FORMAT_WIDTHS = {
 async function emitProducts() {
   await mkdir(`${OUT}/products`, { recursive: true })
 
-  for (const slug of PRODUCTS) {
-    const src = resolve(ROOT, `assets/products/${slug}.jpeg`)
+  for (const { slug, src } of await productSources()) {
     for (const crop of CROPS) {
       for (const w of PRODUCT_WIDTHS) {
         const h = Math.round(w / crop.ratio)

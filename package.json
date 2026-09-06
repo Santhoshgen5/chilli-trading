@@ -5,9 +5,10 @@
   "type": "module",
   "description": "MAVEH WORLD — dry red chilli export marketing site",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm run pages && vite",
     "images": "node scripts/build-images.mjs",
-    "build": "npm run images && tsc --noEmit && vite build && node scripts/prerender.mjs",
+    "pages": "node scripts/gen-pages.mjs",
+    "build": "npm run images && npm run pages && tsc --noEmit && vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "check:contrast": "node scripts/check-contrast.mjs",
