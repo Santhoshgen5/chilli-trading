@@ -20,7 +20,27 @@ export function Footer() {
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           {/* Brand */}
           <div>
-            <LogoLockup height={96} className="h-20 w-auto" />
+            {/*
+              The stacked lockup is drawn on white and a large part of it — the
+              arrow form behind MAVEH — is navy-900, the exact value of this
+              band's ground, so on the dark footer that element disappears and
+              the mark reads as a broken fragment.
+
+              The band itself is not the problem and is not what changes: it
+              bookends the navy hero, carries the gold hairline and is the only
+              dark surface closing the page. So the mark gets the surface it was
+              drawn for instead — a paper plate, in the same card language used
+              everywhere else on the site.
+            */}
+            {/*
+              96px, not the 80px it was: below roughly that height the type set
+              inside the mark stops resolving, which is the reason the header
+              uses the horizontal wordmark instead. On a paper plate there is no
+              longer any reason to keep it small.
+            */}
+            <span className="inline-flex rounded-card bg-paper px-6 py-5">
+              <LogoLockup height={96} className="h-24 w-auto" />
+            </span>
             <p className="mt-6 max-w-xs text-sm leading-relaxed text-navy-300">
               Dry red chilli from Tamil Nadu, India — supplied to bulk buyers against a
               written specification.
