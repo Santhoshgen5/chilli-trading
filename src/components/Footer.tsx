@@ -39,7 +39,9 @@ export function Footer() {
               longer any reason to keep it small.
             */}
             <span className="inline-flex rounded-card bg-paper px-6 py-5">
-              <LogoLockup height={96} className="h-24 w-auto" />
+              {/* Smaller on a phone: at 96px the stacked lockup dominates the
+                  footer, which is the least important thing on the page. */}
+              <LogoLockup height={96} className="h-16 w-auto sm:h-20 lg:h-24" />
             </span>
             <p className="mt-6 max-w-xs text-sm leading-relaxed text-navy-300">
               Dry red chilli from Tamil Nadu, India — supplied to bulk buyers against a
